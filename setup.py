@@ -4,4 +4,10 @@ setup(name='reviewboardbots',
         version='0.1',
         description='The best ever review bot system',
         author='Zach and Tim',
-        packages=['reviewboardbots'])
+        packages=['reviewboardbots'],
+        install_requires=[
+            'RBTools',
+        ],
+        )
+
+
