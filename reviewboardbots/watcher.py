@@ -37,6 +37,8 @@ for review in requests:
     print review.summary
     difflist = review.get_diffs()
     for diff in difflist:
-        diff_file_list = diff.get_file_diff_list() 
+        diff_file_list = diff.get_file_diff_list()
+        for filename in diff_file_list:
+            print(filename)
 
 
