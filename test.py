@@ -1,0 +1,3 @@
+import reviewboardbots
+
+reviewboardbots.start()
