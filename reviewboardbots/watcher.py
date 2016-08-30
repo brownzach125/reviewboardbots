@@ -1,6 +1,6 @@
 import time
 from rbtools.api.client import RBClient
-from datetime import datetime
+import datetime
 from botmanager import BotManager
 
 class Watcher:
@@ -10,20 +10,37 @@ class Watcher:
         self.client = RBClient(server)
         self.names_of_interest = self.getNamesOfInterest()
         self.bot_manager = BotManager("../bots", "../bot_scripts")
+        self.newest_request_seen = datetime.datetime.utcnow().isoformat()
 
     def getNamesOfInterest(self):
         """who the watcher should watch for"""
-        return [ 'zbrown', 'meangirl', 'nobody' ]
+        "TODO make config file"
+        return ['meangirl', 'zbrown', 'nobody', 'spongebob']
 
-    def getNewReviews(self, timestamp):
+    def setNewestTimestamp(self,requests):
+        """We want to filter requests out from the server, but need to use its timestamps"""
+        """Assume chronological order he,he,he"""
+        for request in requests:
+            "Get timestamp from newest request in this group and inc by microsecond :)"
+            time_str = request.last_updated
+            time_obj = datetime.datetime.strptime(time_str, "%Y-%m-%dT%H:%M:%SZ")
+            time_obj += datetime.timedelta(1)
+            self.newest_request_seen = time_obj.isoformat()
+            break
+
+
+    def getNewRequests(self):
         """get reviews after the timestamp"""
         print("Looking for reviews")
         root = self.client.get_root()
-        requests = root.get_review_requests( time_added_from=timestamp)
+        requests = root.get_review_requests(last_updated_from=self.newest_request_seen)
 
-        requests = Watcher.filterRequests(requests, self.names_of_interest)
+        filtered_requests = Watcher.filterRequests(requests, self.names_of_interest)
 
-        return requests
+        "Set the timestamp for next time"
+        self.setNewestTimestamp(requests)
+        print self.newest_request_seen
+        return filtered_requests
 
     @staticmethod
     def filterRequests(requests, watched_names):
@@ -41,15 +58,12 @@ class Watcher:
 
         "Until the end of time"
         print("I am watching")
-        checked_last_at = datetime.utcnow().isoformat()
         while True:
-            self.bot_manager.processNewReviews(self.getNewReviews(checked_last_at))
-
-            "Update the last time we checked"
-            checked_last_at = datetime.utcnow().isoformat()
+            self.bot_manager.processNewReviews(self.getNewRequests())
+            #self.bot_manager.processNewReviews(self.getNewReviews("2016-08-30T18:30:44.664160"))
 
             "TODO pick good wait time"
-            time.sleep(10)
+            time.sleep(1)
 
 
 watcher = Watcher('http://pds-rbdev01')
