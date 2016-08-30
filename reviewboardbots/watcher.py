@@ -65,6 +65,6 @@ class Watcher:
             "TODO pick good wait time"
             time.sleep(1)
 
-
+"Example"
 watcher = Watcher('http://pds-rbdev01')
 watcher.watch()
