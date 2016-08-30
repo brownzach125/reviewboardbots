@@ -1,8 +1,7 @@
 import time
 from rbtools.api.client import RBClient
-from botfood import BotFood
 from datetime import datetime
-import os
+from botmanager import BotManager
 
 class Watcher:
     'The thing that watches review board for things'
@@ -10,6 +9,7 @@ class Watcher:
         print("The watcher is born")
         self.client = RBClient(server)
         self.names_of_interest = self.getNamesOfInterest()
+        self.bot_manager = BotManager("../bots", "../bot_scripts")
 
     def getNamesOfInterest(self):
         'who the watcher should watch for'
@@ -21,7 +21,6 @@ class Watcher:
         root = self.client.get_root()
         requests = root.get_review_requests( time_added_from=timestamp)
 
-        'Filter requests'
         requests = Watcher.filterRequests(requests, self.names_of_interest)
 
         return requests
@@ -42,15 +41,16 @@ class Watcher:
 
         "Until the end of time"
         print("I am watching")
-        checked_last_at = datetime.now()
+        checked_last_at = datetime.utcnow().isoformat()
         while True:
-            new_reviews = self.getNewReviews(checked_last_at)
-            for botname in new_reviews:
-                botfood = BotFood(new_reviews[botname])
-                botfood.save(os.path.join(".." , "bots" , botname))
+            self.bot_manager.processNewReviews(self.getNewReviews(checked_last_at))
+
+            "Update the last time we checked"
+            checked_last_at = datetime.utcnow().isoformat()
 
             "TODO pick good wait time"
-            time.sleep(1)
+            time.sleep(10)
+
 
 watcher = Watcher('http://pds-rbdev01')
 watcher.watch()

@@ -38,7 +38,9 @@ class BotFood:
 
         return result
 
+    'todo, break up into more disectable chunks'
     def save(self, path):
+        'Save the botfood object, including downloading the files it has urls to'
         if not os.path.exists(path):
             os.mkdir(path)
         for request in self.review_requests:
