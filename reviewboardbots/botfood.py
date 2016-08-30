@@ -4,9 +4,9 @@ import urllib
 from urlparse import urlparse, urlunparse
 
 class BotFood:
-    'It\'s what bots crave!!!'
+    """It\'s what bots crave!!!"""
     def __init__(self, reviewlist):
-        "Make a payload out of a review list"
+        """Make a payload out of a review list"""
         self.review_requests = []
         for review in reviewlist:
             review_request = {
@@ -40,12 +40,12 @@ class BotFood:
 
     'todo, break up into more disectable chunks'
     def save(self, path):
-        'Save the botfood object, including downloading the files it has urls to'
+        """Save the botfood object, including downloading the files it has urls to"""
         if not os.path.exists(path):
             os.mkdir(path)
         for request in self.review_requests:
-            id = request['info']['id']
-            reviewPath = os.path.join(path, "request" + str(id))
+            review_id = request['info']['id']
+            reviewPath = os.path.join(path, "request" + str(review_id))
             if not os.path.exists(reviewPath):
                 os.mkdir(reviewPath)
 
@@ -60,7 +60,7 @@ class BotFood:
 
                 url = urlparse(diff['diff'])
                 url = urlunparse(('http', url.netloc,\
-                                 "r/" + str(id) + "/diff/raw/", '','',''))
+                                 "r/" + str(review_id) + "/diff/raw/", '','',''))
                 "Download and save actual diff"
                 urllib.urlretrieve(url , \
                                    os.path.join(diffpath, "diff" ))

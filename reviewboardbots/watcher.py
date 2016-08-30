@@ -4,7 +4,7 @@ from datetime import datetime
 from botmanager import BotManager
 
 class Watcher:
-    'The thing that watches review board for things'
+    """The thing that watches review board for things"""
     def __init__(self,server):
         print("The watcher is born")
         self.client = RBClient(server)
@@ -12,11 +12,11 @@ class Watcher:
         self.bot_manager = BotManager("../bots", "../bot_scripts")
 
     def getNamesOfInterest(self):
-        'who the watcher should watch for'
+        """who the watcher should watch for"""
         return [ 'zbrown', 'meangirl', 'nobody' ]
 
     def getNewReviews(self, timestamp):
-        'get reviews after the timestamp'
+        """get reviews after the timestamp"""
         print("Looking for reviews")
         root = self.client.get_root()
         requests = root.get_review_requests( time_added_from=timestamp)
@@ -27,17 +27,17 @@ class Watcher:
 
     @staticmethod
     def filterRequests(requests, watched_names):
-        dict = {}
+        filtered_requests = {}
         for request in requests:
             for person in request.target_people:
                 if person.title in watched_names:
-                   if person.title not in dict:
-                       dict[person.title] = []
-                   dict[person.title].append(request)
-        return dict
+                   if person.title not in filtered_requests:
+                       filtered_requests[person.title] = []
+                   filtered_requests[person.title].append(request)
+        return filtered_requests
 
     def watch(self):
-        'Periodically check for new reviews, spin off bots when needed'
+        """Periodically check for new reviews, spin off bots when needed"""
 
         "Until the end of time"
         print("I am watching")
