@@ -20,7 +20,6 @@ class BotManager:
                 for request in reviews[botname]:
                     request_id = request.id
                     print("Bot manager would like to start " + botname)
-
                     script_path = os.path.join(self.bot_dir, botname + '.py')
                     food_path = os.path.join(self.bot_food_dir, botname,  "request" + str(request_id))
                     call(['python', script_path, "-i", food_path])
