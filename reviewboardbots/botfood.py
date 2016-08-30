@@ -5,10 +5,10 @@ from urlparse import urlparse, urlunparse
 
 class BotFood:
     """It\'s what bots crave!!!"""
-    def __init__(self, reviewlist):
+    def __init__(self, requestlist):
         """Make a payload out of a review list"""
         self.review_requests = []
-        for review in reviewlist:
+        for review in requestlist:
             review_request = {
                 'info': {
                     'id': review.id,
@@ -28,11 +28,21 @@ class BotFood:
             }
             diff_file_list = diff.get_files()
             for file_diff in diff_file_list:
+
                 fileobj = {
-                    'name' : file_diff.source_file,
-                    'original': file_diff.get_original_file()._url,
-                    'patched' : file_diff.get_patched_file()._url
+                    'filediff_id' : file_diff.id,
+                    'name': file_diff.source_file
                 }
+
+                try:
+                    fileobj['original'] = file_diff.get_original_file()._url
+                except:
+                    pass
+                try:
+                    fileobj['patched'] = file_diff.get_patched_file()._url
+                except:
+                    pass
+
                 obj['files'].append(fileobj)
             result.append(obj)
 
@@ -75,14 +85,17 @@ class BotFood:
                         os.mkdir(filepath)
 
                     "Download original"
-                    urllib.urlretrieve(fileobj['original'], \
-                                       os.path.join(filepath, 'original'))
+                    if 'original' in fileobj:
+                        urllib.urlretrieve(fileobj['original'], \
+                                           os.path.join(filepath, 'original'))
                     "Download patched"
-                    urllib.urlretrieve(fileobj['patched'], \
-                                       os.path.join(filepath, 'patched'))
+                    if 'patched' in fileobj:
+                        urllib.urlretrieve(fileobj['patched'], \
+                                           os.path.join(filepath, 'patched'))
                     "Leave behind some metadata"
                     metadata = {
-                        'name' : fileobj['name']
+                        'name' : fileobj['name'],
+                        'id'   : fileobj['filediff_id']
                     }
                     with open(os.path.join(filepath, 'metadata.json'), 'w') as outfile:
                         json.dump(metadata, outfile)

@@ -10,7 +10,8 @@ class Watcher:
         self.client = RBClient(server)
         self.names_of_interest = self.getNamesOfInterest()
         self.bot_manager = BotManager("../bots", "../bot_scripts")
-        self.newest_request_seen = datetime.datetime.utcnow().isoformat()
+        time_obj = datetime.datetime.utcnow() - datetime.timedelta(minutes=5)
+        self.newest_request_seen = time_obj.isoformat()
 
     def getNamesOfInterest(self):
         """who the watcher should watch for"""
@@ -60,7 +61,6 @@ class Watcher:
         print("I am watching")
         while True:
             self.bot_manager.processNewReviews(self.getNewRequests())
-            #self.bot_manager.processNewReviews(self.getNewReviews("2016-08-30T18:30:44.664160"))
 
             "TODO pick good wait time"
             time.sleep(1)
