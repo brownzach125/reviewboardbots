@@ -1,8 +1,9 @@
 """meangirl is not nice"""
-import sys, getopt, os
-from bot import Bot
+import getopt
+import sys
 from random import randint
 
+from reviewboardbots.bot import Bot
 
 quotes = [
        "If you're from Africa, why are you white?",
@@ -22,7 +23,6 @@ class MeanGirl(Bot):
             file_metadata = self.getFileMetadata(file_path)
             comment = self.createComment(file_metadata['id'],1,1, quotes[randint(0,len(quotes)-1)])
             review['comments'].append(comment)
-
         self.sendReview(review)
 
     def getUsername(self):

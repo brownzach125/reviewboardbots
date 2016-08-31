@@ -25,20 +25,19 @@ class ResponseAgent:
             )
         review.update(body_top=response['message'], public=True, ship_it=response['ship_it'])
 
-if __name__ == "__main__":
-    agent = ResponseAgent("http://pds-rbdev01" ,"meangirl", "meangirl")
-    response = {
-        'request_id': 45,
-        'revision_id': 1,
-        'comments': [
-            {
-                'filediff_id':114,
-                'first_line':1,
-                'num_lines':1,
-                'text':'I loooooovvvvve your bracelet'
-            }
-        ],
-        'message': "You\'re like obsessed with me",
-        'ship_it' : True
-    }
-    agent.respond(response)
+#agent = ResponseAgent("http://pds-rbdev01" ,"meangirl", "meangirl")
+#response = {
+#    'request_id': 45,
+#    'revision_id': 1,
+#    'comments': [
+#        {
+#            'filediff_id':114,
+#            'first_line':1,
+#            'num_lines':1,
+#            'text':'I loooooovvvvve your bracelet'
+#        }
+#    ],
+#    'message': "You\'re like obsessed with me",
+#    'ship_it' : True
+#}
+#agent.respond(response)

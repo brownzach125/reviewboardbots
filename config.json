@@ -1,0 +1,10 @@
+{
+   "review_board_server": "http://pds-rbdev01",
+   "bots": [
+      {
+         "name": "meangirl",
+         "script": "../bot_scripts/meangirl.py",
+         "food_dir": "../bot_food_folder/meangirl"
+      }
+   ]
+}

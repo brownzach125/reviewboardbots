@@ -1,7 +1,7 @@
 """Assume each bot has just one review_request to deal with"""
 import os, sys
 import json
-from reviewboardbots.responseagent import ResponseAgent
+from responseagent import ResponseAgent
 
 class Bot:
     """Generic bot with helper functions"""
@@ -15,7 +15,7 @@ class Bot:
         #os.unlink(self.input_dir)
 
     def getReviewMetadata(self):
-        with open(os.path.join(self.input_dir, 'info')) as data_file:
+        with open(os.path.join(self.input_dir, 'request_metadata.json')) as data_file:
             return json.load(data_file)
 
     #def getRevisionPath(self, number):
@@ -53,11 +53,11 @@ class Bot:
         return [ elem for elem in li if os.path.isdir(elem) ]
 
     def getFileMetadata(self, filepath):
-        with open(os.path.join(filepath, 'metadata.json')) as data_file:
+        with open(os.path.join(filepath, 'file_metadata.json')) as data_file:
             return json.load(data_file)
 
     def getRevisionMetadata(self, revisionpath):
-        with open(os.path.join(revisionpath, 'info')) as data_file:
+        with open(os.path.join(revisionpath, 'revision_metadata.json')) as data_file:
             return json.load(data_file)
 
     def run(self):
