@@ -5,6 +5,11 @@
          "name": "meangirl",
          "script": "../bot_scripts/meangirl.py",
          "food_dir": "../bot_food_folder/meangirl"
+      },
+      {
+         "name": "cppcheck",
+         "script": "../bot_scripts/cppcheck.py",
+         "food_dir": "../bots/cppcheck"
       }
    ]
 }

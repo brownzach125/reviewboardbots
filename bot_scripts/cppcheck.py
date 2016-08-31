@@ -47,7 +47,6 @@ def split_line_info(line_list):
 class CppCheck(Bot):
     def process_change(self, folder_path):
         metadata = self.getFileMetadata(folder_path)
-        filename = metadata['name']
         file_id = metadata['id']
 
         old_filename = os.path.join(folder_path, 'original')
