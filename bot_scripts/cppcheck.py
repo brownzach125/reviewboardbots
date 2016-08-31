@@ -11,7 +11,7 @@ from bot import Bot
 def call_cppcheck(filename):
 
 	#TODO: add cpplint
-	cppcheck = os.path.join(os.path.dirname(__file__), 'cppcheck')
+	cppcheck = 'cppcheck'
 	return subprocess.Popen([cppcheck, "--enable=style,performance,portability", filename],
 		stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[1]
 
@@ -85,4 +85,5 @@ def main(path):
 	bot.run()
 
 if __name__ == "__main__":
-	main(sys.argv[1])
+	print sys.argv
+	main(sys.argv[2])
