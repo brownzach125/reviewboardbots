@@ -25,7 +25,6 @@ class ResponseAgent:
             )
         review.update(body_top=response['message'], public=True, ship_it=response['ship_it'])
 
-
 #agent = ResponseAgent("http://pds-rbdev01" ,"meangirl", "meangirl")
 #response = {
 #    'request_id': 45,

@@ -29,4 +29,3 @@ class BotManager:
             food_path = os.path.join(bot['food_dir'], 'request' + str(request_id))
 
             Popen(['python', script_path, "-i", food_path])
-

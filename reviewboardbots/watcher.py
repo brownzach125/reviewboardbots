@@ -50,7 +50,7 @@ class Watcher:
 
         filtered_requests = self.filterRequests(requests, self.names_of_interest)
 
-        "Set the timestamp for next time"
+        #Set the timestamp for next time
         self.setNewestTimestamp(requests)
         return filtered_requests
 
@@ -98,7 +98,6 @@ class Watcher:
             count += 1
             print "Round " + str(count)
             """TODO Something is still broken here....:("""
-
             "TODO pick good wait time"
             time.sleep(5)
 

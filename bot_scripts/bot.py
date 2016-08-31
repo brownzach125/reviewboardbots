@@ -5,8 +5,10 @@ from reviewboardbots.responseagent import ResponseAgent
 
 class Bot:
     """Generic bot with helper functions"""
-    def __init__(self, input_dir):
+    def __init__(self, input_dir, username="username", password="password"):
         self.input_dir = input_dir
+        self._username = username
+        self._password = password
 
     def __del__(self):
         """Consume the input folder"""
@@ -80,10 +82,10 @@ class Bot:
         }
 
     def getUsername(self):
-        return 'username'
+        return self._username
 
     def getPassword(self):
-        return 'password'
+        return self._password
 
     def getServer(self):
         return 'http://pds-rbdev01'
