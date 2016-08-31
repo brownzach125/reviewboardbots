@@ -1,12 +1,11 @@
-import os
-import shutil
 import difflib
+import os
+import re
 import subprocess
 import sys
-import re
-import json
-from reviewboardbots.responseagent import ResponseAgent
-from bot import Bot
+
+from reviewboardbots.bot import Bot
+
 
 def call_cppcheck(filename):
 

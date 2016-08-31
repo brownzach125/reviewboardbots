@@ -1,8 +1,9 @@
 """meangirl is not nice"""
-import sys, getopt, os
-from bot import Bot
+import getopt
+import sys
 from random import randint
 
+from reviewboardbots.bot import Bot
 
 quotes = [
        "If you're from Africa, why are you white?",
