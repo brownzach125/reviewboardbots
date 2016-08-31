@@ -8,6 +8,12 @@ import json
 from reviewboardbots.responseagent import ResponseAgent
 from bot import Bot
 
+
+#2 = first line #
+#5 = second line # (optional)
+#6 - Description
+CPPCHECK_PARSE = re.compile(r'^\[([^\]]*:(\d+))\](\s*->\s*\[([^\]]*:(\d+))\])?:\s*(.*)$')
+
 def call_cppcheck(filename):
 
     #TODO: add cpplint
@@ -16,9 +22,28 @@ def call_cppcheck(filename):
         stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[1]
 
 def split_line_info(line_list):
-    split_lines = [x.split(':') for x in line_list]
     
-    return ([x[-1] for x in split_lines], [x[:-1] for x in split_lines])
+    warnings = []
+    start_lines = []
+    line_lens = []
+
+    for line in line_list:
+        print 'line: %s' % line
+        if line != '':
+            match = re.match(CPPCHECK_PARSE,line)
+            start_line = int(match.group(2))
+            
+            if match.group(5):
+                end_line = int(match.group(5))
+                line_len = end_line - start_line
+            else:
+                line_len = 1
+
+            warnings.append(match.group(6))
+            start_lines.append(start_line)
+            line_lens.append(line_len)
+            
+    return warnings, start_lines, line_lens
 
 class CppCheck(Bot):
     def process_change(self, folder_path):
@@ -31,36 +56,25 @@ class CppCheck(Bot):
 
         output_old = call_cppcheck(old_filename)
         output_new = call_cppcheck(new_filename)
+
         output_old_list, output_new_list =  output_old.split('\n'), output_new.split('\n')
 
-        output_old_warnings, output_old_line_info = split_line_info(output_old_list)
-        output_new_warnings, output_new_line_info = split_line_info(output_new_list)
+        output_old_warnings = split_line_info(output_old_list)[0]
+        output_new_warnings, output_line_starts, output_line_ends = split_line_info(output_new_list)
+
         differ = difflib.Differ()
         diff_lines = differ.compare(output_old_warnings, output_new_warnings)
-        print output_new_warnings
         comments = []
 
         #match digits at beginning of string
         digits = re.compile('(\d+)')
 
-        for diff, line_info in zip(diff_lines, output_new_line_info):
+        for diff, line_start, line_end in zip(diff_lines, output_line_starts, output_line_ends):
             if diff.startswith('+'):
-                print "diff: %s" % diff
-                if len(line_info) > 0:
-                    line_number = line_info[-1]
-                else:
-                    line_number = "1"
-
-                match = re.match(digits,line_number)
-                if match:
-                    first_line = match.group(1)
-                else:
-                    first_line = 1
-
                 comments.append({
                     "filediff_id":file_id,
-                    "first_line":int(first_line),
-                    "num_lines":1,
+                    "first_line":line_start,
+                    "num_lines":line_end,
                     "text": diff[2:]
                 })
 
@@ -75,7 +89,6 @@ class CppCheck(Bot):
         ship_it = len(comments) == 0
         review = self.createReview(self.getReviewMetadata()['id'], int(self.getLatestRevisionNum()),
             "See comments" if not ship_it else "Ship it!", ship_it)
-        print comments
         review['comments'] += comments
 
         self.sendReview(review)
