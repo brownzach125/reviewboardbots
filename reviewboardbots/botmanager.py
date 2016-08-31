@@ -1,26 +1,32 @@
 import os
 from botfood import BotFood
-from subprocess import call
+from subprocess import Popen
 
 class BotManager:
     """Handles the bots"""
-    def __init__(self, bot_food_dir, bot_dir):
-        if not os.path.exists(bot_food_dir):
-            os.mkdir(bot_food_dir)
-        self.bot_food_dir = bot_food_dir
-        self.bot_dir = bot_dir
+    def __init__(self, bot_dict):
+        self.bots = bot_dict
 
-    def processNewReviews(self, reviews):
+    def processNewReviews(self, requests):
         """reviews key;botname, value: listofreviews"""
-        for botname in reviews:
-                botfood = BotFood(reviews[botname])
-                botfood.save(os.path.join(self.bot_food_dir, botname))
+        for botname in requests:
+                bot = self.bots[botname]
 
-                "Dumbly start a bot instance "
-                for request in reviews[botname]:
-                    request_id = request.id
-                    print("Bot manager would like to start " + botname)
-                    script_path = os.path.join(self.bot_dir, botname + '.py')
-                    food_path = os.path.join(self.bot_food_dir, botname,  "request" + str(request_id))
-                    call(['python', script_path, "-i", food_path])
+                "Make bot food out of this request"
+                botfood = BotFood(requests[botname])
+                botfood.save(bot['food_dir'])
+
+                self.queueNewRequests(requests[botname], bot)
+
+    def queueNewRequests(self, request_list, bot):
+        """Dumbly start a bot instance """
+        for request in request_list:
+            request_id = request.id
+            print("Bot manager would like to start " + bot['name'] + " for " + str(request_id))
+            print "Request Time " + request.last_updated
+
+            script_path = bot['script']
+            food_path = os.path.join(bot['food_dir'], 'request' + str(request_id))
+
+            Popen(['python', script_path, "-i", food_path])
 

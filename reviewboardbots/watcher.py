@@ -1,7 +1,6 @@
 import time
 from rbtools.api.client import RBClient
 import datetime
-from botmanager import BotManager
 
 
 def parseServerTimeStamp(timestamp):
@@ -10,19 +9,21 @@ def parseServerTimeStamp(timestamp):
 
 class Watcher:
     """The thing that watches review board for things"""
-    def __init__(self,server):
+    def __init__(self,server, bot_manager, bot_name_list):
         print("The watcher is born")
         self.client = RBClient(server)
+
+        self.bot_name_list = bot_name_list
         self.names_of_interest = self.getNamesOfInterest()
-        self.bot_manager = BotManager("../bots", "../bot_scripts")
+
+        self.bot_manager = bot_manager
         self.time_obj = datetime.datetime.utcnow() - datetime.timedelta(minutes=5)
         self.newest_request_seen = self.time_obj.isoformat()
         self.requests_seen = {}
 
     def getNamesOfInterest(self):
         """who the watcher should watch for"""
-        "TODO make config file"
-        return ['meangirl', 'zbrown', 'nobody', 'spongebob']
+        return self.bot_name_list
 
     def setNewestTimestamp(self,requests):
         """We want to filter requests out from the server, but need to use its timestamps"""
@@ -41,7 +42,6 @@ class Watcher:
             self.time_obj += datetime.timedelta(seconds=1)
             print "Updating time "  + self.time_obj.isoformat()
             self.newest_request_seen = self.time_obj.isoformat()
-
 
     def getNewRequests(self):
         """get reviews after the timestamp"""
@@ -85,14 +85,14 @@ class Watcher:
             self.requests_seen[request.id] = max
             return True
 
-
     def watch(self):
         """Periodically check for new reviews, spin off bots when needed"""
+        self.keep_watching = True
 
-        "Until the end of time"
-        print("I am watching")
+        "Until my watch is ended"
+        print("Watcher: I am watching")
         count = 0
-        while True:
+        while self.keep_watching:
             self.bot_manager.processNewReviews(self.getNewRequests())
 
             count += 1
@@ -102,6 +102,7 @@ class Watcher:
             "TODO pick good wait time"
             time.sleep(5)
 
-"Example"
-watcher = Watcher('http://pds-rbdev01')
-watcher.watch()
+        print("Watcher: My watch has ended")
+
+    def stop(self):
+        self.keep_watching = False

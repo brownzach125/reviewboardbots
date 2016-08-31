@@ -22,7 +22,6 @@ class MeanGirl(Bot):
             file_metadata = self.getFileMetadata(file_path)
             comment = self.createComment(file_metadata['id'],1,1, quotes[randint(0,len(quotes)-1)])
             review['comments'].append(comment)
-
         self.sendReview(review)
 
     def getUsername(self):
