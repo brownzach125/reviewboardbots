@@ -99,3 +99,4 @@ class BotFood:
                     }
                     with open(os.path.join(filepath, 'metadata.json'), 'w') as outfile:
                         json.dump(metadata, outfile)
+            return reviewPath

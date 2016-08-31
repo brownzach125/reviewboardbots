@@ -16,7 +16,7 @@ class Watcher:
     def getNamesOfInterest(self):
         """who the watcher should watch for"""
         "TODO make config file"
-        return ['meangirl', 'zbrown', 'nobody', 'spongebob']
+        return ['meangirl', 'zbrown', 'nobody', 'spongebob', 'cppcheck']
 
     def setNewestTimestamp(self,requests):
         """We want to filter requests out from the server, but need to use its timestamps"""
@@ -38,7 +38,7 @@ class Watcher:
 
         filtered_requests = Watcher.filterRequests(requests, self.names_of_interest)
 
-        "Set the timestamp for next time"
+        #Set the timestamp for next time
         self.setNewestTimestamp(requests)
         print self.newest_request_seen
         return filtered_requests
@@ -65,6 +65,6 @@ class Watcher:
             "TODO pick good wait time"
             time.sleep(1)
 
-
-watcher = Watcher('http://pds-rbdev01')
-watcher.watch()
+if __name__ == "__main__":
+    watcher = Watcher('http://pds-rbdev01')
+    watcher.watch()
