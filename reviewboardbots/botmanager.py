@@ -1,6 +1,7 @@
 import os
 from botfood import BotFood
-import subprocess
+from subprocess import call
+
 class BotManager:
     """Handles the bots"""
     def __init__(self, bot_food_dir, bot_dir):
@@ -13,16 +14,14 @@ class BotManager:
         """reviews key;botname, value: listofreviews"""
         for botname in reviews:
                 botfood = BotFood(reviews[botname])
-                reviewPath = botfood.save(os.path.join(self.bot_food_dir, botname))
+                botfood.save(os.path.join(self.bot_food_dir, botname))
 
                 "Dumbly start a bot instance "
-                for review in reviews[botname]:
+                for request in reviews[botname]:
+                    request_id = request.id
                     print("Bot manager would like to start " + botname)
-                    
-                    path = os.path.join(os.path.join(self.bot_dir, botname), "start.py")
-                    if os.path.isfile(path):
-                        #TODO: escape to handle whitespace in filenames
-                        print subprocess.Popen(["python", path, reviewPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
-                    else:
-                        print "path not found"
+
+                    script_path = os.path.join(self.bot_dir, botname + '.py')
+                    food_path = os.path.join(self.bot_food_dir, botname,  "request" + str(request_id))
+                    call(['python', script_path, "-i", food_path])
 
