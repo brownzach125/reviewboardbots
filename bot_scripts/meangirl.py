@@ -17,11 +17,11 @@ quotes = [
 
 class MeanGirl(Bot):
     def run(self):
-        review = self.createReview(self.getReviewMetadata()['id'],self.getLatestRevisionNum(), \
+        review = self.createReview(self.getRequestMetadata()['id'], self.getLatestRevisionNum(), \
                                    "Your code sucks", True)
         for file_path in self.getAllFilePaths(self.getLatestRevisionPath()):
             file_metadata = self.getFileMetadata(file_path)
-            comment = self.createComment(file_metadata['id'],1,1, quotes[randint(0,len(quotes)-1)])
+            comment = self.createDiffComment(file_metadata['id'], 1, 1, quotes[randint(0, len(quotes) - 1)])
             review['comments'].append(comment)
         self.sendReview(review)
 

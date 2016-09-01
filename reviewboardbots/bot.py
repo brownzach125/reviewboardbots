@@ -1,4 +1,10 @@
-"""Assume each bot has just one review_request to deal with"""
+"""
+* Assume each bot has just one review_request to deal with
+* Parent class of all bots, it has a lot of nice helpers to manage the
+* file structure created by botfood, though I guess long run I should make
+* botfood work both ways..., but in any event there are helper functions
+* in the class that children classes will benefit from.
+"""
 import os, sys
 import json
 from responseagent import ResponseAgent
@@ -14,7 +20,7 @@ class Bot:
         """Consume the input folder"""
         #os.unlink(self.input_dir)
 
-    def getReviewMetadata(self):
+    def getRequestMetadata(self):
         with open(os.path.join(self.input_dir, 'request_metadata.json')) as data_file:
             return json.load(data_file)
 
@@ -69,21 +75,31 @@ class Bot:
         print "I don\'t do anything"
 
     def createReview(self, request_id, revision_id=1, message="Default bot review message", ship_it=False):
+        """Creates the bareminimum review, feel free to add more once you have it"""
         return {
             'request_id': request_id,
             'revision_id': revision_id,
-            'comments':[],
+            'diff_comments':[],
+            'general_comments':[],
             'message': message ,
             'ship_it': ship_it
         }
 
-    def createComment(self, filediff_id, first_line, num_lines, text):
+    def createDiffComment(self, filediff_id, first_line, num_lines, text):
+        """Creates the bare minium diff comment, feel free to add more once you have it"""
         return {
             'filediff_id':filediff_id,
             'first_line':first_line,
             'num_lines':num_lines,
             'text':text
         }
+
+    def createGeneralComment(self, text):
+        """Creates the bare minimum comment, feel free to add more once you have it"""
+        return {
+            'text':text
+        }
+
 
     def getUsername(self):
         return self._username
