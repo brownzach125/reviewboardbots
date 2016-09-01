@@ -3,6 +3,7 @@ import os
 import re
 import subprocess
 import sys
+import diff_utils
 
 from reviewboardbots.bot import Bot
 
@@ -14,7 +15,6 @@ from reviewboardbots.bot import Bot
 CPPCHECK_PARSE = re.compile(r'^\[([^\]]*:(\d+))\](\s*->\s*\[([^\]]*:(\d+))\])?:\s*(.*)$')
 
 def call_cppcheck(filename):
-
     #TODO: add cpplint
     cppcheck = 'cppcheck'
     return subprocess.Popen([cppcheck, "--enable=style,performance,portability", filename],
@@ -27,7 +27,6 @@ def split_line_info(line_list):
     line_lens = []
 
     for line in line_list:
-        print 'line: %s' % line
         if line != '':
             match = re.match(CPPCHECK_PARSE,line)
             start_line = int(match.group(2))
@@ -48,6 +47,21 @@ class CppCheck(Bot):
     def process_change(self, folder_path):
         metadata = self.getFileMetadata(folder_path)
         file_id = metadata['id']
+        diff_metadata = self.getFileDiffObj(folder_path)
+
+        #Compute mappings from lines in the new file to lines
+        #in the overall diff (so we can report accurate line
+        #numbers when writing comments.)
+        new_line_to_diff_line = {}
+        for chunk in diff_metadata['chunks']:
+            for chunk_line in chunk['lines']:
+                diff_line = chunk_line[0]
+                new_line= chunk_line[4]
+                if not new_line:
+                    continue
+                if new_line in new_line_to_diff_line:
+                    print "Error creating diff metadata: line numbers may be off"
+                new_line_to_diff_line[new_line] = diff_line
 
         old_filename = os.path.join(folder_path, 'original')
         new_filename = os.path.join(folder_path, 'patched')
@@ -67,18 +81,21 @@ class CppCheck(Bot):
         #match digits at beginning of string
         digits = re.compile('(\d+)')
 
-        for diff, line_start, line_end in zip(diff_lines, output_line_starts, output_line_ends):
+        for diff, line_start, num_lines in zip(diff_lines, output_line_starts, output_line_ends):
             if diff.startswith('+'):
                 comments.append({
                     "filediff_id":file_id,
-                    "first_line":line_start,
-                    "num_lines":line_end,
-                    "text": diff[2:]
+                    "first_line":new_line_to_diff_line[line_start],
+                    "num_lines":num_lines,
+                    "text": "[%s] -> [%s]: %s" % (line_start, line_start + num_lines - 1, diff[2:])
                 })
 
         return comments
 
     def run(self):
+        with open(self.getDiffPath(self.getLatestRevisionPath())) as diff_file:
+            diffs = diff_utils.parse_p4_diff(diff_file)
+
         comments = []
         for file_path in self.getAllFilePaths(self.getLatestRevisionPath()):
             file_metadata = self.getFileMetadata(file_path)

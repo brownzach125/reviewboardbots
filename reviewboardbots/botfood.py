@@ -17,7 +17,7 @@ class BotFood:
 
     @staticmethod
     def flattenResource(resource):
-        """Have one of those nasty resources from review board, but just want all it\'s fields?"""
+        """Have one of those nasty resources from review board, but just want all its fields?"""
         obj = {}
         for field in resource._fields:
             obj[field] = resource._fields[field]
@@ -49,12 +49,13 @@ class BotFood:
                 'metadata': BotFood.flattenResource(diff)
             }
             diff_file_list = diff.get_files()
-            for file_diff in diff_file_list:
 
+            for file_diff in diff_file_list:
                 fileobj = {
                     'filediff_id' : file_diff.id,
                     'name': file_diff.source_file,
-                    'metadata': BotFood.flattenResource(file_diff)
+                    'metadata': BotFood.flattenResource(file_diff),
+                    'filediff_data': BotFood.flattenResource(file_diff.get_diff_data())
                 }
 
                 try:
@@ -112,6 +113,9 @@ class BotFood:
         "Leave behind some metadata"
         with open(os.path.join(path, 'file_metadata.json'), 'w') as outfile:
             json.dump(fileobj['metadata'], outfile)
+
+        with open(os.path.join(path, 'filediff_metadata.json'), 'w') as outfile:
+            json.dump(fileobj['filediff_data'], outfile)
 
     'todo, break up into more disectable chunks'
     def save(self, path):
