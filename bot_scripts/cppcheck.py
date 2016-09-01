@@ -3,7 +3,6 @@ import os
 import re
 import subprocess
 import sys
-import diff_utils
 
 from reviewboardbots.bot import Bot
 
@@ -93,9 +92,6 @@ class CppCheck(Bot):
         return comments
 
     def run(self):
-        with open(self.getDiffPath(self.getLatestRevisionPath())) as diff_file:
-            diffs = diff_utils.parse_p4_diff(diff_file)
-
         comments = []
         for file_path in self.getAllFilePaths(self.getLatestRevisionPath()):
             file_metadata = self.getFileMetadata(file_path)
