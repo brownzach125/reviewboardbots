@@ -67,6 +67,10 @@ class Bot:
         with open(os.path.join(revisionpath, 'revision_metadata.json')) as data_file:
             return json.load(data_file)
 
+    def getFileDiffObj(self, filepath):
+        with open(os.path.join(filepath, 'filediff_metadata.json')) as data_file:
+            return json.load(data_file)
+
     def run(self):
         """Process the input"""
         print "I don\'t do anything"
