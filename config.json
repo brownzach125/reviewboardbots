@@ -7,9 +7,9 @@
          "food_dir": "../bot_food_folder/meangirl"
       },
       {
-         "name": "cppcheck",
-         "script": "../bot_scripts/cppcheck.py",
-         "food_dir": "../bots/cppcheck"
+          "name": "linux_kernel_checkpatch",
+          "script": "../bot_scripts/linux_kernel_checkpatch.py",
+          "food_dir":"../checkpatchfood"
       }
    ]
 }

@@ -12,7 +12,8 @@ from responseagent import ResponseAgent
 class Bot:
     """Generic bot with helper functions"""
     def __init__(self, input_dir, username="username", password="password"):
-        self.input_dir = input_dir
+        "Save the absolute path for later"
+        self.input_dir = os.path.abspath(input_dir)
         self._username = username
         self._password = password
 
@@ -77,8 +78,9 @@ class Bot:
             'revision_id': revision_id,
             'diff_comments':[],
             'general_comments':[],
-            'message': message ,
-            'ship_it': ship_it
+            'body_top': message ,
+            'ship_it': ship_it,
+            'public': True
         }
 
     def createDiffComment(self, filediff_id, first_line, num_lines, text):
@@ -96,7 +98,6 @@ class Bot:
             'text':text
         }
 
-
     def getUsername(self):
         return self._username
 
@@ -109,3 +110,13 @@ class Bot:
     def sendReview(self, review):
         agent = ResponseAgent(self.getServer(), self.getUsername(), self.getPassword())
         agent.respond(review)
+
+    def convertRealFilenametoBotFoodFilePath(self, revision_id, filename):
+        diff_path = self.getDiffPath(revision_id)
+        file_path = filename.replace("/", "_")
+        file_path = file_path.replace("\\" , "_")
+        return os.path.join(diff_path, file_path)
+
+
+
+
