@@ -16,28 +16,11 @@ class ResponseAgent:
 
         request = root.get_review_request(review_request_id=response['request_id'])
         review = request.get_reviews().create()
-        for comment in response['comments']:
-            review.get_diff_comments().create(
-                filediff_id=comment['filediff_id'],
-                first_line=comment['first_line'],
-                num_lines=comment['num_lines'],
-                text=comment['text']
-            )
+        diff_comments = review.get_diff_comments
+        general_comments = review.get_replies()
+        for comment in response['diff_comments']:
+            diff_comments().create(**comment)
+        for comment in response['general_comments']:
+            general_comments().create(**comment)
         review.update(body_top=response['message'], public=True, ship_it=response['ship_it'])
 
-#agent = ResponseAgent("http://pds-rbdev01" ,"meangirl", "meangirl")
-#response = {
-#    'request_id': 45,
-#    'revision_id': 1,
-#    'comments': [
-#        {
-#            'filediff_id':114,
-#            'first_line':1,
-#            'num_lines':1,
-#            'text':'I loooooovvvvve your bracelet'
-#        }
-#    ],
-#    'message': "You\'re like obsessed with me",
-#    'ship_it' : True
-#}
-#agent.respond(response)
