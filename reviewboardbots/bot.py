@@ -25,10 +25,9 @@ class Bot:
         with open(os.path.join(self.input_dir, 'request_metadata.json')) as data_file:
             return json.load(data_file)
 
-    #def getRevisionPath(self, number):
-    #    """revision"""
-    #    if os.path.exists(os.path.join(self.input_dir , 'revision' + str(number) )):
-    #        return os.join.path('revision')
+    def getRevisionPath(self, number):
+        """revision"""
+        return os.path.join(self.input_dir, 'revision' + str(number))
 
     def getLatestRevisionNum(self):
         max = 0
@@ -116,11 +115,29 @@ class Bot:
         agent.respond(review)
 
     def convertRealFilenametoBotFoodFilePath(self, revision_id, filename):
-        diff_path = self.getDiffPath(revision_id)
+        diff_path = self.getRevisionPath(revision_id)
         file_path = filename.replace("/", "_")
         file_path = file_path.replace("\\" , "_")
+        file_path += ".file"
         return os.path.join(diff_path, file_path)
 
+    def getPatchedFileLineToUnifiedDiffLineMap(self, file_path):
+        metadata = self.getFileMetadata(file_path)
+        file_id = metadata['id']
+        diff_metadata = self.getFileDiffObj(file_path)
 
-
+        # Compute mappings from lines in the new file to lines
+        # in the overall diff (so we can report accurate line
+        # numbers when writing comments.)
+        new_line_to_diff_line = {}
+        for chunk in diff_metadata['chunks']:
+            for chunk_line in chunk['lines']:
+                diff_line = chunk_line[0]
+                new_line = chunk_line[4]
+                if not new_line:
+                    continue
+                if new_line in new_line_to_diff_line:
+                    print "Error creating diff metadata: line numbers may be off"
+                new_line_to_diff_line[new_line] = diff_line
+        return new_line_to_diff_line
 

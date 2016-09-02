@@ -22,7 +22,7 @@ class MeanGirl(Bot):
         for file_path in self.getAllFilePaths(self.getLatestRevisionPath()):
             file_metadata = self.getFileMetadata(file_path)
             comment = self.createDiffComment(file_metadata['id'], 1, 1, quotes[randint(0, len(quotes) - 1)])
-            review['comments'].append(comment)
+            review['diff_comments'].append(comment)
         self.sendReview(review)
 
     def getUsername(self):
