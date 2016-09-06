@@ -18,7 +18,8 @@ class CheckPatch(Bot):
         call(['git','checkout','master'])
         call(['git','branch','-D','nilrt/16.0/4.1'])
         call(['git','checkout', '-b', 'nilrt/16.0/4.1','origin/nilrt/16.0/4.1'])
-        call(['git', 'pull'])
+        call(['git','branch','-D','dev/zbrown/sdhci-upstream'])
+        call(['git','checkout', '-b', 'dev/zbrown/sdhci-upstream','origin/dev/zbrown/sdhci-upstream'])
         call(['git','checkout','master'])
         print "-------------Finished preparing git folder"
 
@@ -146,7 +147,8 @@ class CheckPatch(Bot):
                     file_path = self.convertRealFilenametoBotFoodFilePath(self.getLatestRevisionNum(),file_name)
                     line_map = self.getPatchedFileLineToUnifiedDiffLineMap(file_path)
                     review_comment=self.createDiffComment(self.getFileMetadata(file_path)['id'],
-                                                          line_map[int(comment['line'])],1, comment['message'])
+                                                          line_map[int(comment['line'])],comment['num_lines'], comment['message'])
+                    review_comment['issue_opened'] = True
                     review['diff_comments'].append(review_comment)
 
             self.sendReview(review)
@@ -216,6 +218,7 @@ def parseChunk(chunk):
 def parseFile(chunk, obj):
     obj['file'] = chunk[1].split(":")[2].strip()
     obj['line'] = chunk[1].split(":")[3].strip()
+    obj['num_lines'] = len(chunk) - 2
     obj['message'] = obj['type'] + ": " + chunk[0].partition(":")[2].strip()
 
 def parseNonFile(chunk,obj):
