@@ -1,26 +1,47 @@
 """Apply the most recent linux kernel checkpatch script to diff"""
-from reviewboardbots.bot import Bot
-import sys, getopt, os
-from subprocess import check_output, call
+import getopt
+import os
 import subprocess
+import sys
+from subprocess import check_output, call
+from sh import git, cd, ls
+import sh
+
+from bots.bot import Bot
+
 
 class CheckPatch(Bot):
-    def changeToGitFolder(self):
-        "My path"
-        linux_tree_path = os.path.join("/", "home", "zbrown", "linux2","linux")
-        "Change working directory"
-        os.chdir(linux_tree_path)
+    def __init__(self, input_dir):
+        if not os.path.exists(input_dir):
+            raise ValueError("Check patch will go hungry if it is fed no existant food_dir")
+        self.input_dir = os.path.abspath(input_dir)
 
-    def prepareGitFolder(self):
-        self.changeToGitFolder()
+        self.repo_folder = os.path.join("/", "home", "zbrown", "linux2")
+        self.repo_origin = "git://git.natinst.com/linux.git"
+
+    def change_to_git_folder(self):
+        "My path"
+        linux_tree_path = os.path.join(self.repo_folder, "linux")
+        "Change working directory"
+        cd(linux_tree_path)
+
+    @staticmethod
+    def process_output(line):
+        print line
+
+    def prepare_git_folder(self):
+        # Does the repo exist?
         print "-------------Preparing git folder"
-        call(['git','fetch'])
-        call(['git','checkout','master'])
-        call(['git','branch','-D','nilrt/16.0/4.1'])
-        call(['git','checkout', '-b', 'nilrt/16.0/4.1','origin/nilrt/16.0/4.1'])
-        call(['git','branch','-D','dev/zbrown/sdhci-upstream'])
-        call(['git','checkout', '-b', 'dev/zbrown/sdhci-upstream','origin/dev/zbrown/sdhci-upstream'])
-        call(['git','checkout','master'])
+        if "linux" not in ls(os.path.join(self.repo_folder)).split():
+            print "linux dir does not exist, cloning now"
+            cd(self.repo_folder)
+            for line in git.clone(self.repo_origin):
+                print line
+            print "Cloning successful"
+
+        self.change_to_git_folder()
+        print git.fetch("origin")
+        git.checkout("master")
         print "-------------Finished preparing git folder"
 
     def deleteBranch(self, branch):
@@ -30,19 +51,17 @@ class CheckPatch(Bot):
             call(['git', 'branch','-D', branch])
         print "------------Branch deleted if it existed"
 
-    def __init__(self, input_dir):
-        if not os.path.exists(input_dir):
-            raise ValueError("Check patch will go hungry if it is fed no existant food_dir")
-        self.input_dir = os.path.abspath(input_dir)
+
 
     def checkoutBranchFromRemote(self, branch):
         call(['git','checkout','-b', branch, 'origin/' + branch])
         return True
 
-    def findBaseBranch(self, branch):
+    # A wonderous magical wonder now defunct
+    def find_base_branch(self, branch):
         print "------------Finding base Branch"
         if self.checkoutBranchFromRemote(branch):
-            magic_command_str=  \
+            magic_command_str =  \
                 'git show-branch | sed "s/].*//" | grep "\*" | grep -v "$(git rev-parse --abbrev-ref HEAD)" | head -n1 | sed "s/^.*\[//" > output.txt'
             call(magic_command_str, shell=True)
             with open('output.txt') as datafile:
@@ -56,52 +75,73 @@ class CheckPatch(Bot):
     def cleanUpGitFolder(self):
         print "Make clean up function"
 
-    def findCommonCommit(self, A, B):
-        try:
-            print "--------------Findind common commit"
-            common_commit = check_output(['git', 'merge-base', A, B]).rstrip()
-            print "Found common commit"
-            return common_commit
-        except subprocess.CalledProcessError as error:
-            print "--------------Find common commit failed"
-            print error
-            return None
+    def find_common_commit(self, a, b):
+        self.change_to_git_folder()
+        print "--------------Finding common commit"
+        common_commit = git(["merge-base", a, b]).rstrip()
+        return common_commit
+
+    def get_branches(self):
+        # TODO handle errors
+        self.change_to_git_folder()
+        branches = []
+        for line in git.branch("--no-color", _iter=True):
+            branches.append(line.rstrip().split()[-1])
+        return branches
+
+    def checkout_branch(self, branch):
+        self.change_to_git_folder()
+        if branch in self.get_branches():
+            # Maybe a better way eh?
+            git.branch(["-D", branch])
+
+        git.checkout(["-b", branch, "origin/" + branch])
+
+    def switch_to_branch(self, branch):
+        # TODO handle errors
+        self.change_to_git_folder()
+        if branch in self.get_branches():
+            git.checkout(branch)
+        else:
+            raise "That branch no exist"
 
     def run(self):
+        """The main execution of a bot"""
         request_metadata = self.getRequestMetadata()
         branch = request_metadata['branch']
-        if not branch:
-            self.reportMissingBranch()
-            return
+        tracking_branch = request_metadata['tracking-branch']
+        if not branch or not tracking_branch:
+            self.report_missing_branch(branch, tracking_branch)
 
-        self.prepareGitFolder()
+        self.prepare_git_folder()
 
-        self.deleteBranch(branch)
+        self.checkout_branch(branch)
+        self.checkout_branch(tracking_branch)
 
-        base_branch = self.findBaseBranch(branch)
+        self.switch_to_branch(branch)
 
-        if not base_branch:
-            print "Did not find base branch"
-            return self.cleanUpGitFolder()
-
-        common_commit = self.findCommonCommit(base_branch,branch)
+        common_commit = self.find_common_commit(tracking_branch, branch)
+        print common_commit
 
         if not common_commit:
-            print "Did not find commont commit"
+            print "Did not find common commit"
             return
 
-        call(['git', 'checkout', branch])
+        self.switch_to_branch(branch)
 
-        "Find commits on branch after common commit"
-        commits = check_output(['git', 'rev-list', common_commit+".." + branch]).rstrip().rsplit()
+        #Find commits on branch after common commit
+        commits = git(["rev-list", common_commit + ".." + branch]).rstrip().rsplit()
+        print commits
 
-        "Format patches"
-        patches= check_output(['git', 'format-patch', '-' + str(len(commits))]).rstrip().splitlines()
+        #"Format patches"
+        patches = git(["format-patch", "-" + str(len(commits))]).rstrip().splitlines()
 
-        patch_details = checkPatches(patches)
-        self.respondToPatches(patch_details)
+        patch_details = self.check_patches(patches)
+        self.respond_to_patches(patch_details)
 
-    def reportMissingBranch(self):
+    def report_missing_branch(self):
+        # TODO handle input of branch and tracking branch
+        # i.e determine which are null and reprot
         request_metadata = self.getRequestMetadata()
         revision_num = self.getLatestRevisionNum()
         review = self.createReview(request_metadata['id'], revision_num, \
@@ -122,11 +162,11 @@ class CheckPatch(Bot):
     def getPassword(self):
         return self.getUsername()
 
-    def respondToPatches(self, patch_details):
+    def respond_to_patches(self, patch_details):
         request_metadata = self.getRequestMetadata()
         for patch_name in patch_details:
             patch_detail = patch_details[patch_name]
-            review = self.createReview(request_id=request_metadata['id'],revision_id=self.getLatestRevisionNum())
+            review = self.createReview(request_id=request_metadata['id'], revision_id=self.getLatestRevisionNum())
             review['ship_it'] = not patch_detail['failed']
             message = patch_name
             if patch_detail['failed']:
@@ -146,49 +186,48 @@ class CheckPatch(Bot):
                     file_name = comment['file']
                     file_path = self.convertRealFilenametoBotFoodFilePath(self.getLatestRevisionNum(),file_name)
                     line_map = self.getPatchedFileLineToUnifiedDiffLineMap(file_path)
-                    review_comment=self.createDiffComment(self.getFileMetadata(file_path)['id'],
-                                                          line_map[int(comment['line'])],comment['num_lines'], comment['message'])
+                    review_comment = self.createDiffComment(self.getFileMetadata(file_path)['id'],
+                                                            line_map[int(comment['line'])], comment['num_lines'],
+                                                            comment['message'])
                     review_comment['issue_opened'] = True
                     review['diff_comments'].append(review_comment)
 
             self.sendReview(review)
 
+    def check_patches(self, patches):
+        obj = {}
+        for patch_name in patches:
+            command = sh.Command(self.repo_folder + "/linux/scripts/checkpatch.pl")
+            lines = command([patch_name, "--no-color"], _ok_code=[0, 1]).split("\n")
 
-def checkPatches(patches):
-    obj = {}
-    for patch_name in patches:
-        command_str = "scripts/checkpatch.pl " + patch_name + ' > ' + patch_name + ".txt"
-        call([command_str], shell=True)
-        lines = None
-        with open(patch_name + '.txt', 'r') as data_file:
-            lines = data_file.readlines()
+            chunks = parse_lines_into_message_chunks(lines)
+            comments = []
+            for chunk in chunks:
+                comment = process_chunk(chunk)
+                if comment:
+                    comments.append(comment)
 
-        chunks = parseLinesIntoMessageChunks(lines)
-        comments = []
-        for chunk in chunks:
-            comment = processChunk(chunk)
-            if comment:
-                comments.append(comment)
+            obj[patch_name] = {
+                "comments": comments,
+                "failed": len(comments),
+                "name": patch_name
+            }
 
-        obj[patch_name] = {
-            "comments": comments,
-            "failed": len(comments),
-            "name": patch_name
-        }
+        return obj
 
-    return obj
 
-def processChunk(chunk):
-    chunk = parseChunk(chunk)
+def process_chunk(chunk):
+    chunk = parse_chunk(chunk)
     if 'message' in chunk:
         return chunk
     else:
         return None
 
-def parseChunk(chunk):
-    type = chunk[0].partition(":")[0]
+
+def parse_chunk(chunk):
+    chunk_type = chunk[0].partition(":")[0]
     obj = {
-        'type':type
+        'chunk_type':chunk_type
     }
 
     if len(chunk) > 1:
@@ -196,45 +235,47 @@ def parseChunk(chunk):
     else:
         second_line_break_down = []
 
-    isFile = False
+    is_file = False
     if len(second_line_break_down) >= 2 and second_line_break_down[1].strip() == "FILE":
-        isFile = True
+        is_file = True
 
-    if (type == "ERROR" or type == "WARNING"):
-        if isFile:
-            parseFile(chunk, obj)
+    if chunk_type == "ERROR" or chunk_type == "WARNING":
+        if is_file:
+            parse_file(chunk, obj)
         else:
-            parseNonFile(chunk, obj)
+            parse_nonfile(chunk, obj)
 
-    elif (type == "total"):
+    elif chunk_type == "total":
         #print "Do nothing with total?"
         pass
     else:
-        #print "What are you then? " + type
+        #print "What are you then? " + chunk_type
         pass
 
     return obj
 
-def parseFile(chunk, obj):
+
+def parse_file(chunk, obj):
     obj['file'] = chunk[1].split(":")[2].strip()
     obj['line'] = chunk[1].split(":")[3].strip()
     obj['num_lines'] = len(chunk) - 2
     obj['message'] = obj['type'] + ": " + chunk[0].partition(":")[2].strip()
 
-def parseNonFile(chunk,obj):
+
+def parse_nonfile(chunk, obj):
     obj['message'] = obj['type'] + ": " + chunk[0].partition(":")[2].strip()
 
-def parseLinesIntoMessageChunks(lines):
-  chunks = []
-  chunk =[]
-  for line in lines:
-    if line == '\n':
-        chunks.append(chunk)
-        chunk = []
-    else:
-        chunk.append(line)
-  return chunks
 
+def parse_lines_into_message_chunks(lines):
+    chunks = []
+    chunk = []
+    for line in lines:
+        if line == '\n':
+            chunks.append(chunk)
+            chunk = []
+        else:
+            chunk.append(line)
+    return chunks
 
 
 def main(argv):

@@ -3,7 +3,7 @@ import getopt
 import sys
 from random import randint
 
-from reviewboardbots.bot import Bot
+from bots.bot import Bot
 
 quotes = [
        "If you're from Africa, why are you white?",

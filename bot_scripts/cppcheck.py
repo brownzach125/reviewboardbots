@@ -4,9 +4,7 @@ import re
 import subprocess
 import sys
 
-from reviewboardbots.bot import Bot
-
-
+from bots.bot import Bot
 
 #2 = first line #
 #5 = second line # (optional)

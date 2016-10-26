@@ -7,6 +7,7 @@ setup(name='reviewboardbots',
         packages=['reviewboardbots'],
         install_requires=[
             'RBTools',
+            'sh',
         ],
         )
 

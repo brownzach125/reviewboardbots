@@ -1,9 +1,9 @@
-from watcher import Watcher
-from botmanager import BotManager
-import threading
 import json
-import time
 import os
+import threading
+
+from bots.botmanager import BotManager
+from watcher import Watcher
 
 
 class Service:

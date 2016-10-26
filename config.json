@@ -9,7 +9,8 @@
       {
           "name": "linux_kernel_checkpatch",
           "script": "../bot_scripts/linux_kernel_checkpatch.py",
-          "food_dir":"../checkpatchfood"
+          "food_dir":"../checkpatchfood",
+          "max_concurrently": 1
       }
    ]
 }
