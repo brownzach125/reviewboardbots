@@ -44,37 +44,6 @@ class CheckPatch(Bot):
         git.checkout("master")
         print "-------------Finished preparing git folder"
 
-    def deleteBranch(self, branch):
-        print "------------Deleting branch " + branch
-        branches = check_output(['git','branch']).rstrip().rsplit()
-        if branch in branches:
-            call(['git', 'branch','-D', branch])
-        print "------------Branch deleted if it existed"
-
-
-
-    def checkoutBranchFromRemote(self, branch):
-        call(['git','checkout','-b', branch, 'origin/' + branch])
-        return True
-
-    # A wonderous magical wonder now defunct
-    def find_base_branch(self, branch):
-        print "------------Finding base Branch"
-        if self.checkoutBranchFromRemote(branch):
-            magic_command_str =  \
-                'git show-branch | sed "s/].*//" | grep "\*" | grep -v "$(git rev-parse --abbrev-ref HEAD)" | head -n1 | sed "s/^.*\[//" > output.txt'
-            call(magic_command_str, shell=True)
-            with open('output.txt') as datafile:
-                print "------------Found base branch"
-                base_branch = datafile.readline()
-                os.unlink('output.txt')
-                return base_branch.rstrip()
-        else:
-            return None
-
-    def cleanUpGitFolder(self):
-        print "Make clean up function"
-
     def find_common_commit(self, a, b):
         self.change_to_git_folder()
         print "--------------Finding common commit"
@@ -200,10 +169,10 @@ class CheckPatch(Bot):
             command = sh.Command(self.repo_folder + "/linux/scripts/checkpatch.pl")
             lines = command([patch_name, "--no-color"], _ok_code=[0, 1]).split("\n")
 
-            chunks = parse_lines_into_message_chunks(lines)
+            messages = list(group_message_lines(lines))
             comments = []
-            for chunk in chunks:
-                comment = process_chunk(chunk)
+            for message in messages:
+                comment = create_comment_from_message(message)
                 if comment:
                     comments.append(comment)
 
@@ -216,8 +185,18 @@ class CheckPatch(Bot):
         return obj
 
 
-def process_chunk(chunk):
-    chunk = parse_chunk(chunk)
+def group_message_lines(lines):
+    message = []
+    for line in lines:
+        if line == '\n':
+            yield message
+            message = []
+        message.append(line)
+    yield message
+
+
+def create_comment_from_message(message):
+    chunk = parse_chunk(message)
     if 'message' in chunk:
         return chunk
     else:
@@ -259,23 +238,11 @@ def parse_file(chunk, obj):
     obj['file'] = chunk[1].split(":")[2].strip()
     obj['line'] = chunk[1].split(":")[3].strip()
     obj['num_lines'] = len(chunk) - 2
-    obj['message'] = obj['type'] + ": " + chunk[0].partition(":")[2].strip()
+    obj['message'] = obj['chunk_type'] + ": " + chunk[0].partition(":")[2].strip()
 
 
 def parse_nonfile(chunk, obj):
-    obj['message'] = obj['type'] + ": " + chunk[0].partition(":")[2].strip()
-
-
-def parse_lines_into_message_chunks(lines):
-    chunks = []
-    chunk = []
-    for line in lines:
-        if line == '\n':
-            chunks.append(chunk)
-            chunk = []
-        else:
-            chunk.append(line)
-    return chunks
+    obj['message'] = obj['chunk_type'] + ": " + chunk[0].partition(":")[2].strip()
 
 
 def main(argv):
