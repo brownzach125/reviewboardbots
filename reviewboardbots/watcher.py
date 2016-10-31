@@ -93,7 +93,7 @@ class Watcher:
         print("Watcher: I am watching")
         count = 0
         while self.keep_watching:
-            self.bot_manager.processNewReviews(self.getNewRequests())
+            self.bot_manager.process_new_requests(self.getNewRequests())
 
             count += 1
             print "Round " + str(count)

@@ -3,14 +3,14 @@
    "bots": [
       {
          "name": "meangirl",
-         "script": "../bot_scripts/meangirl.py",
+         "script": "bots.meangirl",
          "food_dir": "../bot_food_folder/meangirl"
       },
       {
           "name": "linux_kernel_checkpatch",
-          "script": "../bot_scripts/linux_kernel_checkpatch.py",
+          "script": "bots.linux_kernel_checkpatch",
           "food_dir":"../checkpatchfood",
           "max_concurrently": 1
       }
-   ]
+   ],
 }
