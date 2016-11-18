@@ -8,6 +8,7 @@ setup(name='reviewboardbots',
         install_requires=[
             'RBTools',
             'sh',
+            'tinydb'
         ],
         )
 
