@@ -5,9 +5,7 @@ class ResponseAgent:
     """When you just have to say something"""
 
     def __init__(self, server, name, password):
-        self.client = RBClient(server, \
-                               username=name,
-                               password=password)
+        self.client = RBClient(server, username=name, password=password)
         print("Response agent created")
 
     def respond(self, response):
@@ -27,4 +25,7 @@ class ResponseAgent:
 
         review.update(**response)
 
-
+#client = RBClient('http://pds-rbdev02', username='zbrown', password='')
+#root = client.get_root()
+#request = root.get_review_request(review_request_id=159504)
+#print request.get_reviews().create()

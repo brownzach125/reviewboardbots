@@ -5,7 +5,7 @@
 * botfood work both ways..., but in any event there are helper functions
 * in the class that children classes will benefit from.
 """
-import os, sys
+import os
 import json
 from reviewboardbots.responseagent import ResponseAgent
 
@@ -18,19 +18,15 @@ class Bot:
         self._username = username
         self._password = password
 
-    def __del__(self):
-        """Consume the input folder"""
-        #os.unlink(self.input_dir)
-
-    def getRequestMetadata(self):
+    def get_request_metadata(self):
         with open(os.path.join(self.input_dir, 'request_metadata.json')) as data_file:
             return json.load(data_file)
 
-    def getRevisionPath(self, number):
+    def get_revision_path(self, number):
         """revision"""
         return os.path.join(self.input_dir, 'revision' + str(number))
 
-    def getLatestRevisionNum(self):
+    def get_latest_revision_num(self):
         max = 0
         for folder in os.listdir(self.input_dir):
             if 'revision' in folder:
@@ -39,7 +35,7 @@ class Bot:
                     max = revision_num
         return max
 
-    def getLatestRevisionPath(self):
+    def get_latest_revision_path(self):
         max = 0
         foldername = ""
         for folder in os.listdir(self.input_dir):
@@ -51,7 +47,7 @@ class Bot:
 
         return os.path.join(self.input_dir, foldername)
 
-    def getDiffPath(self, revisionPath):
+    def get_diff_path(self, revisionPath):
         return os.path.join(revisionPath, "diff")
 
     def getAllFilePaths(self, revisionPath):
@@ -90,33 +86,33 @@ class Bot:
     def createDiffComment(self, filediff_id, first_line, num_lines, text):
         """Creates the bare minium diff comment, feel free to add more once you have it"""
         return {
-            'filediff_id':filediff_id,
-            'first_line':first_line,
-            'num_lines':num_lines,
-            'text':text
+            'filediff_id': filediff_id,
+            'first_line': first_line,
+            'num_lines': num_lines,
+            'text': text
         }
 
-    def createGeneralComment(self, text):
+    def create_general_comment(self, text):
         """Creates the bare minimum comment, feel free to add more once you have it"""
         return {
             'text':text
         }
 
-    def getUsername(self):
+    def get_username(self):
         return self._username
 
-    def getPassword(self):
+    def get_password(self):
         return self._password
 
-    def getServer(self):
-        return 'http://pds-rbdev01'
+    def get_server(self):
+        return 'http://review-board.natinst.com'
 
-    def sendReview(self, review):
-        agent = ResponseAgent(self.getServer(), self.getUsername(), self.getPassword())
+    def send_review(self, review):
+        agent = ResponseAgent(self.get_server(), self.get_username(), self.get_password())
         agent.respond(review)
 
     def convertRealFilenametoBotFoodFilePath(self, revision_id, filename):
-        diff_path = self.getRevisionPath(revision_id)
+        diff_path = self.get_revision_path(revision_id)
         file_path = filename.replace("/", "_")
         file_path = file_path.replace("\\" , "_")
         file_path += ".file"
@@ -142,3 +138,13 @@ class Bot:
                 new_line_to_diff_line[new_line] = diff_line
         return new_line_to_diff_line
 
+    @staticmethod
+    def do_you_care(changes):
+        #for change in request['new_changes']:
+        #    fields_changed = change['fields_changed']
+        return True
+
+
+# Every bot must have this boilerplate or include their own do you care function
+def do_you_care(changes):
+    return Bot.do_you_care(changes)

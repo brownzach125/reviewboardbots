@@ -3,13 +3,13 @@ import os
 import threading
 
 from bots.botmanager import BotManager
-from watcher import Watcher
+from reviewboardbots.watcher import Watcher
 
 
 class Service:
     def __init__(self, config_file_path):
         with open(config_file_path, 'r') as data_file:
-            self.config= json.load(data_file)
+            self.config = json.load(data_file)
 
         if 'review_board_server' not in self.config:
             raise ValueError('Must set review_board_server')
@@ -31,12 +31,14 @@ class Service:
         print "Service: Start"
         self.watcher_thread = threading.Thread(target=self.watcher.watch)
         self.watcher_thread.start()
+        self.bot_manager.start()
 
     def stop(self):
         print "Service: Stop"
         self.watcher.stop()
+        self.bot_manager.stop()
         self.watcher_thread = None
 
 
-service = Service(os.path.join("..","config.json"))
+service = Service(os.path.join("..", "config.json"))
 service.start()

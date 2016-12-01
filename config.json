@@ -1,16 +1,14 @@
 {
-   "review_board_server": "http://pds-rbdev01",
+   "review_board_server": "http://pds-rbdev02",
    "bots": [
       {
-         "name": "meangirl",
-         "script": "bots.meangirl",
-         "food_dir": "../bot_food_folder/meangirl"
+         "name": "zbrown",
+         "script": "bots.meangirl"
       },
       {
           "name": "linux_kernel_checkpatch",
           "script": "bots.linux_kernel_checkpatch",
-          "food_dir":"../checkpatchfood",
           "max_concurrently": 1
       }
-   ],
+   ]
 }

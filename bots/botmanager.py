@@ -1,8 +1,7 @@
 import threading
-import time
+import traceback
 
-from bots.botfood import BotFood
-from threading import RLock, Condition, Lock
+from threading import RLock, Condition
 import importlib
 
 
@@ -50,6 +49,7 @@ class BotManager:
                     return
                 job = self.pop_request()
 
+            print "I got a job"
             bot = job['bot']
             bot['active'] += 1
             self.queueLock.release()
@@ -59,6 +59,7 @@ class BotManager:
                 bot['code'].main(["-i", job['path']])
             except Exception as e:
                 print e
+                traceback.print_exc()
             finally:
                 self.queueLock.acquire()
                 bot['active'] -= 1
@@ -67,25 +68,27 @@ class BotManager:
 
     # Use by the watcher to hand over new requests
     def process_new_requests(self, requests):
-        """requests key;botname, value: listofrequests"""
-        for bot_name in requests:
+
+        # Okay we're going to get a list of requests that have new changes
+        # its up to the botmanager to figure out if the bots care, maybe he can ask them, eh that's for later
+        for request in requests:
+            for bot_name in request['bots']:
                 bot = self.bots[bot_name]
+                if len(request['new_changes']) == 0:
+                    # new request all bots interested
+                    self.queue_job(bot, request)
+                    continue
 
-                "Make bot food out of these requests and pass it on"
-                try:
-                    bot_food = BotFood(requests[bot_name])
-                    paths = bot_food.save(bot['food_dir'])
-                    self.queue_requests(paths, bot)
-                except Exception as e:
-                    print e
+                if bot['code'].do_you_care(request['new_changes']):
+                    self.queue_job(bot, request)
 
-    def queue_requests(self, paths, bot):
+    def queue_job(self, bot, request):
         self.queueLock.acquire()
-        for path in paths:
-            self.queue.append({
-                "path": path,
-                "bot": bot
-            })
+        print "Queuing job"
+        self.queue.append({
+            "bot": bot,
+            "path": request["bot_food_path"]
+        })
         self.queueLock.notify()
         self.queueLock.release()
 
@@ -97,21 +100,3 @@ class BotManager:
                 if self.bots[bot_name]["active"] < self.bots[bot_name]["max_concurrently"]:
                     self.queue.pop(index)
                     return job
-
-foreman = BotManager({
-    "bobby" : {
-        "name" : "bobby",
-        "script" : "bots.linux_kernel_checkpatch",
-    }
-})
-
-# They must be absolute paths!!!!!!!!!!! Look into making bot_food do this
-foreman.queue_requests(["../checkpatchfood/request178"], foreman.bots["bobby"])
-foreman.start()
-foreman.queue_requests(["./checkpatchfood/request178"], foreman.bots["bobby"])
-time.sleep(3)
-foreman.stop()
-
-print "All done now"
-
-

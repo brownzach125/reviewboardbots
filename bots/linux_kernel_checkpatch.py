@@ -76,7 +76,7 @@ class CheckPatch(Bot):
 
     def run(self):
         """The main execution of a bot"""
-        request_metadata = self.getRequestMetadata()
+        request_metadata = self.get_request_metadata()
         branch = request_metadata['branch']
         tracking_branch = request_metadata['tracking-branch']
         if not branch or not tracking_branch:
@@ -111,31 +111,31 @@ class CheckPatch(Bot):
     def report_missing_branch(self):
         # TODO handle input of branch and tracking branch
         # i.e determine which are null and reprot
-        request_metadata = self.getRequestMetadata()
-        revision_num = self.getLatestRevisionNum()
+        request_metadata = self.get_request_metadata()
+        revision_num = self.get_latest_revision_num()
         review = self.createReview(request_metadata['id'], revision_num, \
                                    "There are issues", False)
 
-        files = self.getAllFilePaths(self.getLatestRevisionPath())
+        files = self.getAllFilePaths(self.get_latest_revision_path())
         file_metadata = self.getFileMetadata(files[0])
         comment = self.createDiffComment(filediff_id=file_metadata['id'], first_line=1,
                                          num_lines=1,text="Please specify the branch!")
         comment['issue_opened'] = True
 
         review['diff_comments'].append(comment)
-        self.sendReview(review)
+        self.send_review(review)
 
-    def getUsername(self):
+    def get_username(self):
         return "linux_kernel_checkpatch"
 
-    def getPassword(self):
-        return self.getUsername()
+    def get_password(self):
+        return self.get_username()
 
     def respond_to_patches(self, patch_details):
-        request_metadata = self.getRequestMetadata()
+        request_metadata = self.get_request_metadata()
         for patch_name in patch_details:
             patch_detail = patch_details[patch_name]
-            review = self.createReview(request_id=request_metadata['id'], revision_id=self.getLatestRevisionNum())
+            review = self.createReview(request_id=request_metadata['id'], revision_id=self.get_latest_revision_num())
             review['ship_it'] = not patch_detail['failed']
             message = patch_name
             if patch_detail['failed']:
@@ -144,7 +144,7 @@ class CheckPatch(Bot):
                 message += ' is good to go!'
             review['body_top'] = message
 
-            file_paths = self.getAllFilePaths(self.getLatestRevisionPath())
+            file_paths = self.getAllFilePaths(self.get_latest_revision_path())
             first_file_id = self.getFileMetadata(file_paths[0])['id']
             for comment in patch_detail['comments']:
                 if 'file' not in comment:
@@ -153,7 +153,7 @@ class CheckPatch(Bot):
                     review['diff_comments'].append(review_comment)
                 else:
                     file_name = comment['file']
-                    file_path = self.convertRealFilenametoBotFoodFilePath(self.getLatestRevisionNum(),file_name)
+                    file_path = self.convertRealFilenametoBotFoodFilePath(self.get_latest_revision_num(), file_name)
                     line_map = self.getPatchedFileLineToUnifiedDiffLineMap(file_path)
                     review_comment = self.createDiffComment(self.getFileMetadata(file_path)['id'],
                                                             line_map[int(comment['line'])], comment['num_lines'],
@@ -161,7 +161,7 @@ class CheckPatch(Bot):
                     review_comment['issue_opened'] = True
                     review['diff_comments'].append(review_comment)
 
-            self.sendReview(review)
+            self.send_review(review)
 
     def check_patches(self, patches):
         obj = {}

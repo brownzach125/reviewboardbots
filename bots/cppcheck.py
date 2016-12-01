@@ -91,16 +91,16 @@ class CppCheck(Bot):
 
     def run(self):
         comments = []
-        for file_path in self.getAllFilePaths(self.getLatestRevisionPath()):
+        for file_path in self.getAllFilePaths(self.get_latest_revision_path()):
             file_metadata = self.getFileMetadata(file_path)
             comments += self.process_change(file_path)
 
         ship_it = len(comments) == 0
-        review = self.createReview(self.getRequestMetadata()['id'], int(self.getLatestRevisionNum()),
+        review = self.createReview(self.get_request_metadata()['id'], int(self.get_latest_revision_num()),
             "See comments" if not ship_it else "Ship it!", ship_it)
         review['diff_comments'] += comments
 
-        self.sendReview(review)
+        self.send_review(review)
 
 def main(path):
     bot = CppCheck(path, 'cppcheck', 'fpRocks')
