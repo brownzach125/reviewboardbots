@@ -105,7 +105,7 @@ class Bot:
         return self._password
 
     def get_server(self):
-        return 'http://review-board.natinst.com'
+        return 'http://pds-rbdev02'
 
     def send_review(self, review):
         agent = ResponseAgent(self.get_server(), self.get_username(), self.get_password())

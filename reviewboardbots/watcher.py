@@ -22,7 +22,7 @@ class Watcher:
         self.newest_request_seen_timestamp = self.time_obj.isoformat()
         self.requests_seen = {}
         self.keep_watching = False
-        self.bot_food_path = "./botfood"
+        self.bot_food_path = "/home/zbrown/techWeek/reviewboardbots/botfood"
         self.data = Data(self.client, self.bot_food_path, self.bot_name_list)
 
     def set_newest_timestamp(self, requests):
@@ -133,6 +133,12 @@ class Data:
 
         # Oh well if we haven't even placed the key change_list into request it must be new
         if "change_list" not in request or len(change_list) == 0:
+            request['change_list'] = change_list
+            return change_list
+
+        if not len(request['change_list']):
+            # Okay there is a request['change_list'] option, but it's empty and change_list is not
+            # send change list!
             request['change_list'] = change_list
             return change_list
 

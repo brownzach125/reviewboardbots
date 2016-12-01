@@ -40,8 +40,10 @@ class CheckPatch(Bot):
             print "Cloning successful"
 
         self.change_to_git_folder()
+        git.clean("-fxd")
         print git.fetch("origin")
         git.checkout("master")
+        git.pull("-f")
         print "-------------Finished preparing git folder"
 
     def find_common_commit(self, a, b):
@@ -77,14 +79,23 @@ class CheckPatch(Bot):
     def run(self):
         """The main execution of a bot"""
         request_metadata = self.get_request_metadata()
-        branch = request_metadata['branch']
-        tracking_branch = request_metadata['tracking-branch']
+        # branch = request_metadata['branch']
+        # tracking_branch = request_metadata['tracking-branch']
+
+        full_branch = request_metadata['branch']
+        branch = full_branch.split()[0]
+        tracking_branch = full_branch.split("tracking:")
+        if len(tracking_branch):
+            tracking_branch = tracking_branch[1]
+
+
         if not branch or not tracking_branch:
             self.report_missing_branch(branch, tracking_branch)
 
         self.prepare_git_folder()
 
         self.checkout_branch(branch)
+        tracking_branch = tracking_branch.replace("origin/", "")
         self.checkout_branch(tracking_branch)
 
         self.switch_to_branch(branch)
@@ -126,10 +137,11 @@ class CheckPatch(Bot):
         self.send_review(review)
 
     def get_username(self):
-        return "linux_kernel_checkpatch"
+        return "zbrown"
 
     def get_password(self):
-        return self.get_username()
+        #return self.get_username()
+        return ""
 
     def respond_to_patches(self, patch_details):
         request_metadata = self.get_request_metadata()
@@ -257,6 +269,10 @@ def main(argv):
 
     bot = CheckPatch(inputdir)
     bot.run()
+
+
+def do_you_care(changes):
+    return Bot.do_you_care(changes)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
