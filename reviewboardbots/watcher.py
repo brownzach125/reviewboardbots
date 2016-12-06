@@ -160,4 +160,4 @@ class Data:
         # Save the new change list to the request now that we're done with the old one
         request['change_list'] = change_list
 
-        return new_changes
+        return True, new_changes

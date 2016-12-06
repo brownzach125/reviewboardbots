@@ -102,13 +102,11 @@ class Bot:
     def create_review(self, request_id, revision_id=1, message="Default bot review message", ship_it=False):
         """Creates the bareminimum review, feel free to add more once you have it"""
         return {
-            'request_id': request_id,
-            'revision_id': revision_id,
-            'diff_comments':[],
-            'general_comments':[],
-            'body_top': message ,
+            'body_top': message,
             'ship_it': ship_it,
-            'public': True
+            'diff_comments': [],
+            'public': True,
+            'request_id': request_id
         }
 
     def create_diff_comment(self, filediff_id, first_line, num_lines, text):
