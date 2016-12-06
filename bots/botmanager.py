@@ -79,7 +79,7 @@ class BotManager:
                     self.queue_job(bot, request)
                     continue
 
-                if bot['code'].do_you_care(request['new_changes']):
+                if bot['code'].do_you_care(request['new_changes'], bot['name']):
                     self.queue_job(bot, request)
 
     def queue_job(self, bot, request):

@@ -20,14 +20,8 @@ class CheckPatch(Bot):
         self.repo_origin = "git://git.natinst.com/linux.git"
 
     def change_to_git_folder(self):
-        "My path"
         linux_tree_path = os.path.join(self.repo_folder, "linux")
-        "Change working directory"
         cd(linux_tree_path)
-
-    @staticmethod
-    def process_output(line):
-        print line
 
     def prepare_git_folder(self):
         # Does the repo exist?
@@ -60,6 +54,13 @@ class CheckPatch(Bot):
             branches.append(line.rstrip().split()[-1])
         return branches
 
+    def branch_exist(self, branch):
+        """Does this branch exist upstream?"""
+        self.change_to_git_folder()
+        for line in git(["ls-remote", "--heads"], _iter=True):
+            if branch == line.split("refs/heads/")[1].rstrip().strip():
+                return True
+
     def checkout_branch(self, branch):
         self.change_to_git_folder()
         if branch in self.get_branches():
@@ -67,14 +68,6 @@ class CheckPatch(Bot):
             git.branch(["-D", branch])
 
         git.checkout(["-b", branch, "origin/" + branch])
-
-    def switch_to_branch(self, branch):
-        # TODO handle errors
-        self.change_to_git_folder()
-        if branch in self.get_branches():
-            git.checkout(branch)
-        else:
-            raise "That branch no exist"
 
     def run(self):
         """The main execution of a bot"""
@@ -85,20 +78,27 @@ class CheckPatch(Bot):
         full_branch = request_metadata['branch']
         branch = full_branch.split()[0]
         tracking_branch = full_branch.split("tracking:")
-        if len(tracking_branch):
-            tracking_branch = tracking_branch[1]
-
+        if len(tracking_branch) > 1:
+            tracking_branch = tracking_branch[-1]
+            tracking_branch = tracking_branch.replace("origin/", "")
+        else:
+            tracking_branch = None
 
         if not branch or not tracking_branch:
             self.report_missing_branch(branch, tracking_branch)
+            return
 
         self.prepare_git_folder()
 
-        self.checkout_branch(branch)
-        tracking_branch = tracking_branch.replace("origin/", "")
-        self.checkout_branch(tracking_branch)
+        tracking_branch_exist = self.branch_exist(tracking_branch)
+        branch_exist = self.branch_exist(branch)
 
-        self.switch_to_branch(branch)
+        if not branch_exist or not tracking_branch_exist:
+            self.report_missing_branch_exist(branch, branch_exist, tracking_branch, tracking_branch_exist)
+            return
+
+        self.checkout_branch(tracking_branch)
+        self.checkout_branch(branch)
 
         common_commit = self.find_common_commit(tracking_branch, branch)
         print common_commit
@@ -106,8 +106,6 @@ class CheckPatch(Bot):
         if not common_commit:
             print "Did not find common commit"
             return
-
-        self.switch_to_branch(branch)
 
         #Find commits on branch after common commit
         commits = git(["rev-list", common_commit + ".." + branch]).rstrip().rsplit()
@@ -119,9 +117,7 @@ class CheckPatch(Bot):
         patch_details = self.check_patches(patches)
         self.respond_to_patches(patch_details)
 
-    def report_missing_branch(self):
-        # TODO handle input of branch and tracking branch
-        # i.e determine which are null and reprot
+    def report_missing_branch(self, branch, tracking_branch):
         request_metadata = self.get_request_metadata()
         revision_num = self.get_latest_revision_num()
         review = self.createReview(request_metadata['id'], revision_num, \
@@ -129,8 +125,34 @@ class CheckPatch(Bot):
 
         files = self.getAllFilePaths(self.get_latest_revision_path())
         file_metadata = self.getFileMetadata(files[0])
-        comment = self.createDiffComment(filediff_id=file_metadata['id'], first_line=1,
-                                         num_lines=1,text="Please specify the branch!")
+
+        if not branch or not tracking_branch:
+            message = "Please specify the branch and tracking branch.\n" \
+                      "<branch> tracking:<tracking_branch>"
+        comment = self.create_diff_comment(filediff_id=file_metadata['id'], first_line=1,
+                                           num_lines=1, text=message)
+        comment['issue_opened'] = True
+
+        review['diff_comments'].append(comment)
+        self.send_review(review)
+
+    def report_missing_branch_exist(self, branch, branch_exist, tracking_branch, tracking_branch_exist):
+        request_metadata = self.get_request_metadata()
+        revision_num = self.get_latest_revision_num()
+        review = self.createReview(request_metadata['id'], revision_num, \
+                                   "There are issues", False)
+
+        files = self.getAllFilePaths(self.get_latest_revision_path())
+        file_metadata = self.getFileMetadata(files[0])
+
+        message = ""
+        if not branch_exist:
+            message += "Branch: " + branch + " does not exist\n"
+        if not tracking_branch_exist:
+            message += "Tracking-Branch: " + tracking_branch + " does not exist\n"
+
+        comment = self.create_diff_comment(filediff_id=file_metadata['id'], first_line=1,
+                                           num_lines=1, text=message)
         comment['issue_opened'] = True
 
         review['diff_comments'].append(comment)
@@ -141,7 +163,7 @@ class CheckPatch(Bot):
 
     def get_password(self):
         #return self.get_username()
-        return ""
+        return "Justice4All@Once"
 
     def respond_to_patches(self, patch_details):
         request_metadata = self.get_request_metadata()
@@ -160,16 +182,16 @@ class CheckPatch(Bot):
             first_file_id = self.getFileMetadata(file_paths[0])['id']
             for comment in patch_detail['comments']:
                 if 'file' not in comment:
-                    review_comment=self.createDiffComment(first_file_id,1,1,comment['message'])
+                    review_comment=self.create_diff_comment(first_file_id, 1, 1, comment['message'])
                     review_comment['issue_opened'] = True
                     review['diff_comments'].append(review_comment)
                 else:
                     file_name = comment['file']
                     file_path = self.convertRealFilenametoBotFoodFilePath(self.get_latest_revision_num(), file_name)
                     line_map = self.getPatchedFileLineToUnifiedDiffLineMap(file_path)
-                    review_comment = self.createDiffComment(self.getFileMetadata(file_path)['id'],
-                                                            line_map[int(comment['line'])], comment['num_lines'],
-                                                            comment['message'])
+                    review_comment = self.create_diff_comment(self.getFileMetadata(file_path)['id'],
+                                                              line_map[int(comment['line'])], comment['num_lines'],
+                                                              comment['message'])
                     review_comment['issue_opened'] = True
                     review['diff_comments'].append(review_comment)
 
@@ -271,8 +293,8 @@ def main(argv):
     bot.run()
 
 
-def do_you_care(changes):
-    return Bot.do_you_care(changes)
+def do_you_care(changes, botname):
+    return Bot.do_you_care(changes, botname)
 
 if __name__ == "__main__":
     main(sys.argv[1:])

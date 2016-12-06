@@ -21,7 +21,7 @@ class MeanGirl(Bot):
                                    "Your code sucks", True)
         for file_path in self.getAllFilePaths(self.get_latest_revision_path()):
             file_metadata = self.getFileMetadata(file_path)
-            comment = self.createDiffComment(file_metadata['id'], 1, 1, quotes[randint(0, len(quotes) - 1)])
+            comment = self.create_diff_comment(file_metadata['id'], 1, 1, quotes[randint(0, len(quotes) - 1)])
             review['diff_comments'].append(comment)
         self.send_review(review)
 

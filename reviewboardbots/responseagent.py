@@ -13,7 +13,7 @@ class ResponseAgent:
         root = self.client.get_root()
 
         request = root.get_review_request(review_request_id=response['request_id'])
-        review = request.get_reviews().create()
+        review = request.get_reviews().create(body_top="")
         diff_comments = review.get_diff_comments
         "This link does not exist :((((("
         #general_comments = review.get_general_comments()
@@ -24,8 +24,3 @@ class ResponseAgent:
             diff_comments().create(**comment)
 
         review.update(**response)
-
-#client = RBClient('http://pds-rbdev02', username='zbrown', password='')
-#root = client.get_root()
-#request = root.get_review_request(review_request_id=159504)
-#print request.get_reviews().create()

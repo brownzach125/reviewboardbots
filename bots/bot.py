@@ -83,19 +83,13 @@ class Bot:
             'public': True
         }
 
-    def createDiffComment(self, filediff_id, first_line, num_lines, text):
+    def create_diff_comment(self, filediff_id, first_line, num_lines, text):
         """Creates the bare minium diff comment, feel free to add more once you have it"""
         return {
             'filediff_id': filediff_id,
             'first_line': first_line,
             'num_lines': num_lines,
             'text': text
-        }
-
-    def create_general_comment(self, text):
-        """Creates the bare minimum comment, feel free to add more once you have it"""
-        return {
-            'text':text
         }
 
     def get_username(self):
@@ -139,12 +133,21 @@ class Bot:
         return new_line_to_diff_line
 
     @staticmethod
-    def do_you_care(changes):
-        #for change in request['new_changes']:
-        #    fields_changed = change['fields_changed']
-        return True
+    def do_you_care(changes, botname):
+        for change in changes:
+            fields_changed = change['fields_changed']
+            if 'diff' in fields_changed:
+                return True
+
+            if 'branch' in fields_changed:
+                return True
+
+            if 'target_people' in fields_changed and botname in fields_changed['target_people']['added']:
+                return True
+
+        return False
 
 
 # Every bot must have this boilerplate or include their own do you care function
-def do_you_care(changes):
-    return Bot.do_you_care(changes)
+def do_you_care(changes, botname):
+    return Bot.do_you_care(changes, botname)
