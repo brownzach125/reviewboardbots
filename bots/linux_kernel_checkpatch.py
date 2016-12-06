@@ -1,9 +1,5 @@
 """Apply the most recent linux kernel checkpatch script to diff"""
-import getopt
 import os
-import subprocess
-import sys
-from subprocess import check_output, call
 from sh import git, cd, ls
 import sh
 
@@ -11,7 +7,9 @@ from bots.bot import Bot
 
 
 class CheckPatch(Bot):
-    def __init__(self, input_dir):
+    def __init__(self, input_dir, config):
+        Bot.__init__(self, input_dir, config)
+
         if not os.path.exists(input_dir):
             raise ValueError("Check patch will go hungry if it is fed no existant food_dir")
         self.input_dir = os.path.abspath(input_dir)
@@ -120,7 +118,7 @@ class CheckPatch(Bot):
     def report_missing_branch(self, branch, tracking_branch):
         request_metadata = self.get_request_metadata()
         revision_num = self.get_latest_revision_num()
-        review = self.createReview(request_metadata['id'], revision_num, \
+        review = self.create_review(request_metadata['id'], revision_num, \
                                    "There are issues", False)
 
         files = self.getAllFilePaths(self.get_latest_revision_path())
@@ -139,7 +137,7 @@ class CheckPatch(Bot):
     def report_missing_branch_exist(self, branch, branch_exist, tracking_branch, tracking_branch_exist):
         request_metadata = self.get_request_metadata()
         revision_num = self.get_latest_revision_num()
-        review = self.createReview(request_metadata['id'], revision_num, \
+        review = self.create_review(request_metadata['id'], revision_num, \
                                    "There are issues", False)
 
         files = self.getAllFilePaths(self.get_latest_revision_path())
@@ -158,18 +156,11 @@ class CheckPatch(Bot):
         review['diff_comments'].append(comment)
         self.send_review(review)
 
-    def get_username(self):
-        return "zbrown"
-
-    def get_password(self):
-        #return self.get_username()
-        return "Justice4All@Once"
-
     def respond_to_patches(self, patch_details):
         request_metadata = self.get_request_metadata()
         for patch_name in patch_details:
             patch_detail = patch_details[patch_name]
-            review = self.createReview(request_id=request_metadata['id'], revision_id=self.get_latest_revision_num())
+            review = self.create_review(request_id=request_metadata['id'], revision_id=self.get_latest_revision_num())
             review['ship_it'] = not patch_detail['failed']
             message = patch_name
             if patch_detail['failed']:
@@ -279,22 +270,10 @@ def parse_nonfile(chunk, obj):
     obj['message'] = obj['chunk_type'] + ": " + chunk[0].partition(":")[2].strip()
 
 
-def main(argv):
-    try:
-        opts, args = getopt.getopt(argv, "i:")
-    except:
-        print 'checkpatch.py -i <inputdir>'
-
-    for opt, arg in opts:
-        if opt == '-i':
-            inputdir = arg
-
-    bot = CheckPatch(inputdir)
-    bot.run()
+# Boiler Plate
+def main(inputdir, config):
+    CheckPatch(inputdir, config).run()
 
 
 def do_you_care(changes, botname):
     return Bot.do_you_care(changes, botname)
-
-if __name__ == "__main__":
-    main(sys.argv[1:])

@@ -7,7 +7,7 @@ import importlib
 
 class BotManager:
     """Handles the bots"""
-    def __init__(self, bot_dict, max_threads=5):
+    def __init__(self, bot_dict, server="", max_threads=5):
         self.bots = bot_dict
         self.being_paid = False
         self.threads = []
@@ -22,6 +22,7 @@ class BotManager:
             if 'max_concurrently' not in bot:
                 bot['max_concurrently'] = 1
             bot['code'] = importlib.import_module(bot['script'])
+            bot['server'] = server
 
     def start(self):
         self.being_paid = True
@@ -56,7 +57,7 @@ class BotManager:
 
             # Do the job
             try:
-                bot['code'].main(["-i", job['path']])
+                bot['code'].main(job['path'], bot)
             except Exception as e:
                 print e
                 traceback.print_exc()

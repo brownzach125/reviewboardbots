@@ -5,12 +5,16 @@ import urllib
 
 class BotFood:
     """It\'s what bots crave!!!"""
-    def __init__(self, request):
+    def __init__(self, request, is_request=True):
         """Make a payload out of a review list"""
-        self.review_request = {
-            'metadata': BotFood.get_request_metadata(request),
-            'diffs': BotFood.process_diff_lists(request.get_diffs())
-        }
+        if is_request:
+            self.review_request = {
+                'metadata': BotFood.get_request_metadata(request),
+                'diffs': BotFood.process_diff_lists(request.get_diffs())
+            }
+        else:
+            # So the bot food already exists treat request as path to botfood
+            self.input_dir = request
 
     @staticmethod
     def flatten_resource(resource):

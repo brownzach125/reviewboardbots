@@ -98,12 +98,12 @@ class Data:
 
     def fresh_requests(self):
         Request = Query()
-        return self.request_table.search(Request.new_changes != [])
+        return self.request_table.search(Request.needs_attention != False)
 
     def mark_attended(self, requests):
         Request = Query()
         for request in requests:
-            self.request_table.update({'new_changes': []}, Request.id == request["id"])
+            self.request_table.update({'needs_attention': False, 'new_changes': []}, Request.id == request["id"])
 
     def add_requests(self, requests):
         for raw_request in requests:
@@ -111,7 +111,6 @@ class Data:
             request = {
                 "id": raw_request["id"],
                 "bots": [bot.title for bot in raw_request.target_people if bot.title in self.bot_name_list],
-                "bot_food_path": BotFood(raw_request).save(self.botfood_path)
             }
 
             entry = self.request_table.search(Request.id == raw_request["id"])
@@ -123,7 +122,10 @@ class Data:
 
             # LOL Lazy, but who cares? it works
             request = self.request_table.search(Request.id == raw_request["id"])[0]
-            request['new_changes'] = self.request_need_attention(raw_request, request)
+            request['needs_attention'], request['new_changes'] = self.request_need_attention(raw_request, request)
+            # Only save the bot food if we think anyone will care
+            if request['needs_attention']:
+                request['bot_food_path'] = BotFood(raw_request).save(self.botfood_path)
             self.request_table.update(request, Request.id == raw_request["id"])
 
     # Does a request need attention and if so from who?
@@ -132,21 +134,25 @@ class Data:
         change_list = [BotFood.flatten_resource(r) for r in change_list]
 
         # Oh well if we haven't even placed the key change_list into request it must be new
-        if "change_list" not in request or len(change_list) == 0:
+        if "change_list" not in request:
             request['change_list'] = change_list
-            return change_list
+            return True, change_list
+
+        if not len(change_list):
+            # Okay so since the condition above didn't happen and the list is empty then
+            return False, []
 
         if not len(request['change_list']):
             # Okay there is a request['change_list'] option, but it's empty and change_list is not
             # send change list!
             request['change_list'] = change_list
-            return change_list
+            return True, change_list
 
         # Obviously if the change list has not changed in size then there are no changes
         # Holy shit it turns out they only store 25 changes tops!!!!! fuck
         # Okay well they id the changes, so if the top of the two lists is the same, well there you have it
         if request['change_list'][0]['id'] == change_list[0]['id']:
-            return []
+            return False, []
 
         # Okay so there are some new changes, get those
         new_changes = change_list[:len(request['change_list'])]

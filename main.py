@@ -23,7 +23,7 @@ class Service:
             bot_name_list.append(bot['name'])
             bot_dict[bot['name']] = bot
 
-        self.bot_manager = BotManager(bot_dict)
+        self.bot_manager = BotManager(bot_dict, self.config['review_board_server'])
         self.watcher = Watcher(self.config['review_board_server'], self.bot_manager, bot_name_list)
         self.watcher_thread = None
 

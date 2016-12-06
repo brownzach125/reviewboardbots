@@ -19,8 +19,5 @@ class ResponseAgent:
         #general_comments = review.get_general_comments()
         for comment in response['diff_comments']:
             diff_comments().create(**comment)
-        "TODO general comments are broken I don\'t know what\'s up with that :("
-        for comment in response['general_comments']:
-            diff_comments().create(**comment)
 
         review.update(**response)

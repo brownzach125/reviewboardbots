@@ -96,7 +96,7 @@ class CppCheck(Bot):
             comments += self.process_change(file_path)
 
         ship_it = len(comments) == 0
-        review = self.createReview(self.get_request_metadata()['id'], int(self.get_latest_revision_num()),
+        review = self.create_review(self.get_request_metadata()['id'], int(self.get_latest_revision_num()),
             "See comments" if not ship_it else "Ship it!", ship_it)
         review['diff_comments'] += comments
 

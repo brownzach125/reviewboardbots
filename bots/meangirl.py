@@ -1,6 +1,4 @@
 """meangirl is not nice"""
-import getopt
-import sys
 from random import randint
 
 from bot import Bot
@@ -16,8 +14,11 @@ quotes = [
 
 
 class MeanGirl(Bot):
+    def __init(self, input_dir, config):
+        super(MeanGirl, self).__init(input_dir, config)
+
     def run(self):
-        review = self.createReview(self.get_request_metadata()['id'], self.get_latest_revision_num(), \
+        review = self.create_review(self.get_request_metadata()['id'], self.get_latest_revision_num(), \
                                    "Your code sucks", True)
         for file_path in self.getAllFilePaths(self.get_latest_revision_path()):
             file_metadata = self.getFileMetadata(file_path)
@@ -25,29 +26,13 @@ class MeanGirl(Bot):
             review['diff_comments'].append(comment)
         self.send_review(review)
 
-    def get_username(self):
-        return 'zbrown'
 
-    def get_password(self):
-        return ''
-
-
-def main(argv):
-    try:
-        opts, args = getopt.getopt(argv, "i:")
-    except:
-        print 'meangirl.py -i <inputdir>'
-
-    for opt, arg in opts:
-        if opt == '-i':
-            inputdir = arg
-
-    bot = MeanGirl(inputdir)
-    bot.run()
+# Boiler Plate,
+def main(input):
+    MeanGirl(input, "meangirl's reviewboard name", "meangirl's password").run()
 
 
+# Boiler Plate, sorry. Though it you wanted you could create your own do_you_care function
 def do_you_care(changes):
     return Bot.do_you_care(changes)
 
-if __name__ == "__main__":
-    main(sys.argv[1:])

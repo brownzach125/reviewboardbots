@@ -12,11 +12,12 @@ from reviewboardbots.responseagent import ResponseAgent
 
 class Bot:
     """Generic bot with helper functions"""
-    def __init__(self, input_dir, username="username", password="password"):
+    def __init__(self, input_dir, config):
         "Save the absolute path for later"
         self.input_dir = os.path.abspath(input_dir)
-        self._username = username
-        self._password = password
+        self._username = config['name']
+        self._password = config['password']
+        self._server = config['server']
 
     def get_request_metadata(self):
         with open(os.path.join(self.input_dir, 'request_metadata.json')) as data_file:
@@ -67,11 +68,38 @@ class Bot:
         with open(os.path.join(filepath, 'filediff_metadata.json')) as data_file:
             return json.load(data_file)
 
+    def convertRealFilenametoBotFoodFilePath(self, revision_id, filename):
+        diff_path = self.get_revision_path(revision_id)
+        file_path = filename.replace("/", "_")
+        file_path = file_path.replace("\\" , "_")
+        file_path += ".file"
+        return os.path.join(diff_path, file_path)
+
+    def getPatchedFileLineToUnifiedDiffLineMap(self, file_path):
+        metadata = self.getFileMetadata(file_path)
+        file_id = metadata['id']
+        diff_metadata = self.getFileDiffObj(file_path)
+
+        # Compute mappings from lines in the new file to lines
+        # in the overall diff (so we can report accurate line
+        # numbers when writing comments.)
+        new_line_to_diff_line = {}
+        for chunk in diff_metadata['chunks']:
+            for chunk_line in chunk['lines']:
+                diff_line = chunk_line[0]
+                new_line = chunk_line[4]
+                if not new_line:
+                    continue
+                if new_line in new_line_to_diff_line:
+                    print "Error creating diff metadata: line numbers may be off"
+                new_line_to_diff_line[new_line] = diff_line
+        return new_line_to_diff_line
+
     def run(self):
         """Process the input"""
         print "I don\'t do anything"
 
-    def createReview(self, request_id, revision_id=1, message="Default bot review message", ship_it=False):
+    def create_review(self, request_id, revision_id=1, message="Default bot review message", ship_it=False):
         """Creates the bareminimum review, feel free to add more once you have it"""
         return {
             'request_id': request_id,
@@ -99,38 +127,12 @@ class Bot:
         return self._password
 
     def get_server(self):
-        return 'http://pds-rbdev02'
+        return self._server
 
     def send_review(self, review):
         agent = ResponseAgent(self.get_server(), self.get_username(), self.get_password())
         agent.respond(review)
 
-    def convertRealFilenametoBotFoodFilePath(self, revision_id, filename):
-        diff_path = self.get_revision_path(revision_id)
-        file_path = filename.replace("/", "_")
-        file_path = file_path.replace("\\" , "_")
-        file_path += ".file"
-        return os.path.join(diff_path, file_path)
-
-    def getPatchedFileLineToUnifiedDiffLineMap(self, file_path):
-        metadata = self.getFileMetadata(file_path)
-        file_id = metadata['id']
-        diff_metadata = self.getFileDiffObj(file_path)
-
-        # Compute mappings from lines in the new file to lines
-        # in the overall diff (so we can report accurate line
-        # numbers when writing comments.)
-        new_line_to_diff_line = {}
-        for chunk in diff_metadata['chunks']:
-            for chunk_line in chunk['lines']:
-                diff_line = chunk_line[0]
-                new_line = chunk_line[4]
-                if not new_line:
-                    continue
-                if new_line in new_line_to_diff_line:
-                    print "Error creating diff metadata: line numbers may be off"
-                new_line_to_diff_line[new_line] = diff_line
-        return new_line_to_diff_line
 
     @staticmethod
     def do_you_care(changes, botname):
