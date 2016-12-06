@@ -24,7 +24,7 @@ class Service:
             bot_dict[bot['name']] = bot
 
         self.bot_manager = BotManager(bot_dict, self.config['review_board_server'])
-        self.watcher = Watcher(self.config['review_board_server'], self.bot_manager, bot_name_list)
+        self.watcher = Watcher(self.config['review_board_server'], self.bot_manager, bot_name_list, self.config['creds'])
         self.watcher_thread = None
 
     def start(self):
@@ -40,5 +40,5 @@ class Service:
         self.watcher_thread = None
 
 
-service = Service(os.path.join("..", "config.json"))
+service = Service(os.path.join("config.json"))
 service.start()

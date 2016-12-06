@@ -11,9 +11,9 @@ def parse_server_time_stamp(timestamp):
 
 class Watcher:
     """The thing that watches review board for things"""
-    def __init__(self, server, bot_manager, bot_name_list):
+    def __init__(self, server, bot_manager, bot_name_list, creds):
         print("The watcher is born")
-        self.client = RBClient(server, username="zbrown", password='Justice4All@Once')
+        self.client = RBClient(server, username=creds['username'], password=creds['password'])
 
         self.bot_name_list = bot_name_list
 
@@ -22,7 +22,7 @@ class Watcher:
         self.newest_request_seen_timestamp = self.time_obj.isoformat()
         self.requests_seen = {}
         self.keep_watching = False
-        self.bot_food_path = "/home/zbrown/techWeek/reviewboardbots/botfood"
+        self.bot_food_path = "/home/zbrown/reviewboardbots/reviewboardbots/botfood"
         self.data = Data(self.client, self.bot_food_path, self.bot_name_list)
 
     def set_newest_timestamp(self, requests):
