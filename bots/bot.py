@@ -142,8 +142,10 @@ class Bot:
             if 'branch' in fields_changed:
                 return True
 
-            if 'target_people' in fields_changed and botname in fields_changed['target_people']['added']:
-                return True
+            if 'target_people' in fields_changed and 'added' in fields_changed['target_people']:
+                for added_person in fields_changed['target_people']['added']:
+                    if added_person['username'] == botname:
+                        return True
 
         return False
 
