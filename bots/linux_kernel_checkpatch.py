@@ -112,6 +112,8 @@ class CheckPatch(Bot):
         #"Format patches"
         patches = git(["format-patch", "-" + str(len(commits))]).rstrip().splitlines()
 
+        self.checkout_branch("master")
+
         patch_details = self.check_patches(patches)
         self.respond_to_patches(patch_details)
 
@@ -173,7 +175,7 @@ class CheckPatch(Bot):
             first_file_id = self.getFileMetadata(file_paths[0])['id']
             for comment in patch_detail['comments']:
                 if 'file' not in comment:
-                    review_comment=self.create_diff_comment(first_file_id, 1, 1, comment['message'])
+                    review_comment = self.create_diff_comment(first_file_id, 1, 1, comment['message'])
                     review_comment['issue_opened'] = True
                     review['diff_comments'].append(review_comment)
                 else:
@@ -277,3 +279,6 @@ def main(inputdir, config):
 
 def do_you_care(changes, botname):
     return Bot.do_you_care(changes, botname)
+
+#main("/home/zbrown/techWeek/reviewboardbots/botfood/163793",
+    #  {"name": "zbrown", "password": "", "server": "http://review-board.natinst.com"})
