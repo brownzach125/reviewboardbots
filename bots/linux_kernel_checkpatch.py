@@ -160,22 +160,26 @@ class CheckPatch(Bot):
 
     def respond_to_patches(self, patch_details):
         request_metadata = self.get_request_metadata()
+        review = self.create_review(request_id=request_metadata['id'], revision_id=self.get_latest_revision_num())
+        review['ship_it'] = True
+        review['body_top'] = ""
+
         for patch_name in patch_details:
             patch_detail = patch_details[patch_name]
-            review = self.create_review(request_id=request_metadata['id'], revision_id=self.get_latest_revision_num())
-            review['ship_it'] = not patch_detail['failed']
+            review['ship_it'] = review['ship_it'] and not patch_detail['failed']
             message = patch_name
             if patch_detail['failed']:
-                message += ' has style problems, please review'
+                message += ' has style problems, please review\n'
             else:
-                message += ' is good to go!'
-            review['body_top'] = message
+                message += ' is good to go!\n'
+            review['body_top'] += message
 
             file_paths = self.getAllFilePaths(self.get_latest_revision_path())
             first_file_id = self.getFileMetadata(file_paths[0])['id']
             for comment in patch_detail['comments']:
                 if 'file' not in comment:
-                    review_comment = self.create_diff_comment(first_file_id, 1, 1, comment['message'])
+                    review_comment = self.create_diff_comment(first_file_id, 1, 1,
+                                                              "In " + patch_name + ",\n" + comment['message'])
                     review_comment['issue_opened'] = True
                     review['diff_comments'].append(review_comment)
                 else:
@@ -184,11 +188,11 @@ class CheckPatch(Bot):
                     line_map = self.getPatchedFileLineToUnifiedDiffLineMap(file_path)
                     review_comment = self.create_diff_comment(self.getFileMetadata(file_path)['id'],
                                                               line_map[int(comment['line'])], comment['num_lines'],
-                                                              comment['message'])
+                                                              "In " + patch_name + ",\n" + comment['message'])
                     review_comment['issue_opened'] = True
                     review['diff_comments'].append(review_comment)
 
-            self.send_review(review)
+        self.send_review(review)
 
     def check_patches(self, patches):
         obj = {}
