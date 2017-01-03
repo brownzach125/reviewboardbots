@@ -164,8 +164,7 @@ class CheckPatch(Bot):
         review['ship_it'] = True
         review['body_top'] = ""
 
-        for patch_name in patch_details:
-            patch_detail = patch_details[patch_name]
+        for patch_name, patch_detail in sorted(patch_details.iteritems()):
             review['ship_it'] = review['ship_it'] and not patch_detail['failed']
             message = patch_name
             if patch_detail['failed']:
@@ -219,12 +218,11 @@ class CheckPatch(Bot):
 def group_message_lines(lines):
     message = []
     for line in lines:
-        if line == '\n':
+        if line == '\n' or line == "":
             yield message
             message = []
+	    continue
         message.append(line)
-    yield message
-
 
 def create_comment_from_message(message):
     chunk = parse_chunk(message)
