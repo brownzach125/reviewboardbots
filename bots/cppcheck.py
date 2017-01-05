@@ -6,16 +6,20 @@ import sys
 
 from bots.bot import Bot
 
-#2 = first line #
-#5 = second line # (optional)
-#6 - Description
+# 2 = first line #
+# 5 = second line # (optional)
+# 6 - Description
 CPPCHECK_PARSE = re.compile(r'^\[([^\]]*:(\d+))\](\s*->\s*\[([^\]]*:(\d+))\])?:\s*(.*)$')
+
 
 def call_cppcheck(filename):
     #TODO: add cpplint
     cppcheck = 'cppcheck'
-    return subprocess.Popen([cppcheck, "--enable=style,performance,portability", filename],
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[1]
+    value = subprocess.Popen([cppcheck, "--enable=style,performance,portability", filename],
+                              stdout=subprocess.PIPE,
+                              stderr=subprocess.PIPE).communicate()[1]
+    return value
+
 
 def split_line_info(line_list):
     
@@ -40,20 +44,24 @@ def split_line_info(line_list):
             
     return warnings, start_lines, line_lens
 
+
 class CppCheck(Bot):
+    def __init(self, input_dir, config):
+        Bot.__init__(self, input_dir, config)
+
     def process_change(self, folder_path):
         metadata = self.getFileMetadata(folder_path)
         file_id = metadata['id']
         diff_metadata = self.getFileDiffObj(folder_path)
 
-        #Compute mappings from lines in the new file to lines
-        #in the overall diff (so we can report accurate line
-        #numbers when writing comments.)
+        # Compute mappings from lines in the new file to lines
+        # in the overall diff (so we can report accurate line
+        # numbers when writing comments.)
         new_line_to_diff_line = {}
         for chunk in diff_metadata['chunks']:
             for chunk_line in chunk['lines']:
                 diff_line = chunk_line[0]
-                new_line= chunk_line[4]
+                new_line = chunk_line[4]
                 if not new_line:
                     continue
                 if new_line in new_line_to_diff_line:
@@ -66,7 +74,7 @@ class CppCheck(Bot):
         output_old = call_cppcheck(old_filename)
         output_new = call_cppcheck(new_filename)
 
-        output_old_list, output_new_list =  output_old.split('\n'), output_new.split('\n')
+        output_old_list, output_new_list = output_old.split('\n'), output_new.split('\n')
 
         output_old_warnings = split_line_info(output_old_list)[0]
         output_new_warnings, output_line_starts, output_line_ends = split_line_info(output_new_list)
@@ -75,7 +83,7 @@ class CppCheck(Bot):
         diff_lines = differ.compare(output_old_warnings, output_new_warnings)
         comments = []
 
-        #match digits at beginning of string
+        # match digits at beginning of string
         digits = re.compile('(\d+)')
 
         for diff, line_start, num_lines in zip(diff_lines, output_line_starts, output_line_ends):
@@ -96,16 +104,19 @@ class CppCheck(Bot):
             comments += self.process_change(file_path)
 
         ship_it = len(comments) == 0
-        review = self.create_review(self.get_request_metadata()['id'], int(self.get_latest_revision_num()),
-            "See comments" if not ship_it else "Ship it!", ship_it)
+        review = self.create_review(
+            self.get_request_metadata()['id'],
+            int(self.get_latest_revision_num()),
+            "See comments" if not ship_it else "Ship it!",
+            ship_it)
         review['diff_comments'] += comments
 
         self.send_review(review)
 
-def main(path):
-    bot = CppCheck(path, 'cppcheck', 'fpRocks')
-    bot.run()
+# Boiler Plate
+def main(inputdir, config):
+    CppCheck(inputdir, config).run()
 
-if __name__ == "__main__":
-    print sys.argv
-    main(sys.argv[2])
+# Bolier Plate
+def do_you_care(changes, botname):
+    return Bot.do_you_care(changes, botname)
