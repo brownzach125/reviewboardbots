@@ -15,7 +15,7 @@ quotes = [
 
 class MeanGirl(Bot):
     def __init(self, input_dir, config):
-        super(MeanGirl, self).__init(input_dir, config)
+        Bot.__init__(self, input_dir, config)
 
     def run(self):
         review = self.create_review(self.get_request_metadata()['id'], self.get_latest_revision_num(), \
@@ -28,11 +28,11 @@ class MeanGirl(Bot):
 
 
 # Boiler Plate,
-def main(input):
-    MeanGirl(input, "meangirl's reviewboard name", "meangirl's password").run()
+def main(inputdir, config):
+    MeanGirl(inputdir, config).run()
 
 
 # Boiler Plate, sorry. Though it you wanted you could create your own do_you_care function
-def do_you_care(changes):
-    return Bot.do_you_care(changes)
+def do_you_care(changes, botname):
+    return Bot.do_you_care(changes, botname)
 
