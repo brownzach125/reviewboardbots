@@ -80,7 +80,7 @@ class Watcher:
             self.data.mark_attended(requests_in_need_of_attention)
 
             "TODO pick good wait time"
-            time.sleep(5)
+            time.sleep(60)
 
         print("Watcher: My watch has ended")
 

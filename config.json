@@ -1,15 +1,26 @@
 {
    "review_board_server": "http://review-board.natinst.com",
+   "creds": 
+	{
+		"username": "linux_kernel_checkpatch_bot",
+		"password": ""
+	},
    "bots": [
       {
-         "name": "meangirl",
-         "script": "bots.meangirl"
-      },
-      {
-          "name": "zbrown",
+          "name": "linux_kernel_checkpatch_bot",
           "password": "",
           "script": "bots.linux_kernel_checkpatch",
           "max_concurrently": 1
+      },
+      {
+         "name": "cpplint_bot",
+         "password": "",
+         "script": "bots.cppcheck"
+      },
+      {
+       "name": "reviewboard_bot_debug_1",
+       "password": "",
+       "script": "bots.meangirl"
       }
    ]
 }
