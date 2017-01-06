@@ -73,7 +73,7 @@ class CheckPatch(Bot):
         # branch = request_metadata['branch']
         # tracking_branch = request_metadata['tracking-branch']
 
-        full_branch = request_metadata['branch']
+        full_branch = request_metadata['branch'].strip()
         branch = full_branch.split()[0]
         tracking_branch = full_branch.split("tracking:")
         if len(tracking_branch) > 1:
@@ -221,8 +221,9 @@ def group_message_lines(lines):
         if line == '\n' or line == "":
             yield message
             message = []
-	    continue
+        continue
         message.append(line)
+
 
 def create_comment_from_message(message):
     chunk = parse_chunk(message)
@@ -282,5 +283,3 @@ def main(inputdir, config):
 def do_you_care(changes, botname):
     return Bot.do_you_care(changes, botname)
 
-#main("/home/zbrown/techWeek/reviewboardbots/botfood/163793",
-    #  {"name": "zbrown", "password": "", "server": "http://review-board.natinst.com"})
