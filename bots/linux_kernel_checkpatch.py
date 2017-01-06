@@ -221,7 +221,7 @@ def group_message_lines(lines):
         if line == '\n' or line == "":
             yield message
             message = []
-        continue
+            continue
         message.append(line)
 
 
