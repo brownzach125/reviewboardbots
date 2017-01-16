@@ -13,6 +13,8 @@ class Watcher:
     """The thing that watches review board for things"""
     def __init__(self, server, bot_manager, bot_name_list, creds):
         print("The watcher is born")
+        self.creds = creds
+        self.server = server
         self.client = RBClient(server, username=creds['username'], password=creds['password'])
 
         self.bot_name_list = bot_name_list
@@ -71,16 +73,19 @@ class Watcher:
         "Until my watch is ended"
         print("Watcher: I am watching")
         while self.keep_watching:
+            try:
+                new_requests = self.get_new_requests()
+                self.data.add_requests(new_requests)
 
-            new_requests = self.get_new_requests()
-            self.data.add_requests(new_requests)
-
-            requests_in_need_of_attention = self.data.fresh_requests()
-            self.bot_manager.process_new_requests(requests_in_need_of_attention)
-            self.data.mark_attended(requests_in_need_of_attention)
-
-            "TODO pick good wait time"
+                requests_in_need_of_attention = self.data.fresh_requests()
+                self.bot_manager.process_new_requests(requests_in_need_of_attention)
+                self.data.mark_attended(requests_in_need_of_attention)
+            except:
+                # If something goes wrong, create a new client and move on.
+                # It's a little too broad, but it should keep the lights on.
+                self.client = RBClient(self.server, username=self.creds['username'], password=self.creds['password'])
             time.sleep(60)
+
 
         print("Watcher: My watch has ended")
 
