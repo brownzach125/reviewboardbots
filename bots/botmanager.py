@@ -3,6 +3,8 @@ import traceback
 
 from threading import RLock, Condition
 import importlib
+import logging
+import datetime
 
 
 class BotManager:
@@ -50,14 +52,15 @@ class BotManager:
                     return
                 job = self.pop_request()
 
-            print "I got a job"
             bot = job['bot']
             bot['active'] += 1
             self.queueLock.release()
 
             # Do the job
             try:
+                logging.info("Worker " + str(id) + " is working on " + job['path'] + " with " + bot["name"])
                 bot['code'].main(job['path'], bot)
+                logging.info("Worker " + str(id) + " is done with " + job['path'])
             except Exception as e:
                 print e
                 traceback.print_exc()
@@ -69,23 +72,27 @@ class BotManager:
 
     # Use by the watcher to hand over new requests
     def process_new_requests(self, requests):
+        request_id_list = [request["id"] for request in requests]
+        logging.info("A new batch of requests are being handed to the botmanager " + str(request_id_list))
 
         # Okay we're going to get a list of requests that have new changes
         # its up to the botmanager to figure out if the bots care, maybe he can ask them, eh that's for later
         for request in requests:
+            logging.info("Checking what bots are interested in review request " + str(request["id"]))
             for bot_name in request['bots']:
                 bot = self.bots[bot_name]
                 if len(request['new_changes']) == 0:
                     # new request all bots interested
                     self.queue_job(bot, request)
+                    logging.info(bot_name + " is interested in " + str(request["id"]))
                     continue
 
                 if bot['code'].do_you_care(request['new_changes'], bot['name']):
+                    logging.info(bot_name + " is interested in " + str(request["id"]))
                     self.queue_job(bot, request)
 
     def queue_job(self, bot, request):
         self.queueLock.acquire()
-        print "Queuing job"
         self.queue.append({
             "bot": bot,
             "path": request["bot_food_path"]
