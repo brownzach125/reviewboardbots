@@ -27,8 +27,9 @@ Most bot scripts will eventually post a review.
 ## Setup
 
 1. Clone the repo
-2. Edit the config.json
-3. Run python main.py
+2. Run the python install script
+3. Edit the config.json
+4. Run python main.py
 
    There are known issues with the file structure. You'll probbally need to change some paths.
 
