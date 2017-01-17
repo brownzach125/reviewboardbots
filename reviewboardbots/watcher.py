@@ -1,4 +1,6 @@
 import time
+import logging
+import traceback
 from rbtools.api.client import RBClient
 import datetime
 from tinydb import TinyDB, Query
@@ -24,7 +26,7 @@ class Watcher:
         self.newest_request_seen_timestamp = self.time_obj.isoformat()
         self.requests_seen = {}
         self.keep_watching = False
-        self.bot_food_path = "/home/zbrown/reviewboardbots/reviewboardbots/botfood"
+        self.bot_food_path = "/home/zbrown/techWeek/reviewboardbots/botfood"
         self.data = Data(self.client, self.bot_food_path, self.bot_name_list)
 
     def set_newest_timestamp(self, requests):
@@ -49,8 +51,10 @@ class Watcher:
         root = self.client.get_root()
         # requests = root.get_review_requests(last_updated_from=self.newest_request_seen_timestamp)
         requests = root.get_review_requests()
+        logging.info("Raw list of requests received " + str([request["id"] for request in requests]))
 
         requests = self.filter_out_requests_not_for_our_bots(requests)
+        logging.info("list of requests after filtering by bot names " + str([request["id"] for request in requests]))
 
         # Set the timestamp for next time
         self.set_newest_timestamp(requests)
@@ -78,14 +82,17 @@ class Watcher:
                 self.data.add_requests(new_requests)
 
                 requests_in_need_of_attention = self.data.fresh_requests()
-                self.bot_manager.process_new_requests(requests_in_need_of_attention)
-                self.data.mark_attended(requests_in_need_of_attention)
-            except:
+                if requests_in_need_of_attention:
+                    self.bot_manager.process_new_requests(requests_in_need_of_attention)
+                    self.data.mark_attended(requests_in_need_of_attention)
+            except Exception as err:
                 # If something goes wrong, create a new client and move on.
                 # It's a little too broad, but it should keep the lights on.
                 self.client = RBClient(self.server, username=self.creds['username'], password=self.creds['password'])
-            time.sleep(60)
+                traceback.print_exc()
 
+                logging.error("The watcher encountered an error while polling")
+            time.sleep(5)
 
         print("Watcher: My watch has ended")
 
