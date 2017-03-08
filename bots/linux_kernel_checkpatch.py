@@ -206,7 +206,7 @@ class CheckPatch(Bot):
         obj = {}
         for patch_name in patches:
             command = sh.Command(self.repo_folder + "/linux/scripts/checkpatch.pl")
-            lines = command([patch_name, "--no-color"], _ok_code=[0, 1]).split("\n")
+            lines = command([patch_name, "--no-color", "--strict"], _ok_code=[0, 1]).split("\n")
 
             messages = list(group_message_lines(lines))
             comments = []
@@ -257,7 +257,7 @@ def parse_chunk(chunk):
     if len(second_line_break_down) >= 2 and second_line_break_down[1].strip() == "FILE":
         is_file = True
 
-    if chunk_type == "ERROR" or chunk_type == "WARNING":
+    if chunk_type == "ERROR" or chunk_type == "WARNING" or chunk_type == "CHECK":
         if is_file:
             parse_file(chunk, obj)
         else:
