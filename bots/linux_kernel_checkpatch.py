@@ -6,6 +6,34 @@ import sh
 from bots.bot import Bot
 
 
+def branch_not_specified_message():
+    message = \
+                "The checkpatch bot needs the branch field of your review to contain\n" \
+                "the name of your branch and your tracking branch. Set the branch field\n" \
+                "to \"<branch> tracking:<tracking_branch>\" \n" \
+                "\n" \
+                "If you\'ve used the checkpath bot before you might expect to have to enter\n" \
+                "\"<branch> tracking:origin<tracking_branch>\" The origin part of the tracking branch is no longer\n" \
+                "needed and will cause an error if you include it."
+    return message
+
+
+def branch_does_not_exist_message(branch):
+    message = \
+                "The branch you specified in the branch field: {0} does not exist.\n" \
+                "Check the spelling and ensure that you've pushed the branch to the ni git repo\n"
+    return message.format(branch)
+
+
+def tracking_branch_does_not_exist_message(tracking_branch):
+    message = \
+                "The tracking branch you specified in the branch field: {0} does not exist.\n" \
+                "Check the spelling and ensure that it is a branch on the ni git repo\n" \
+                "Also if you included 'origin' in the tracking branch name, that's no longer required and now causes errors\n" \
+                "Sorry for the confusion"
+    return message.format(tracking_branch)
+
+
 class CheckPatch(Bot):
     def __init__(self, input_dir, config):
         Bot.__init__(self, input_dir, config)
@@ -87,7 +115,7 @@ class CheckPatch(Bot):
         tracking_branch = full_branch.split("tracking:")
         if len(tracking_branch) > 1:
             tracking_branch = tracking_branch[-1]
-            tracking_branch = tracking_branch.replace("origin/", "")
+            # tracking_branch = tracking_branch.replace("origin/", "")
         else:
             tracking_branch = None
 
@@ -114,11 +142,11 @@ class CheckPatch(Bot):
             print "Did not find common commit"
             return
 
-        #Find commits on branch after common commit
+        # Find commits on branch after common commit
         commits = git(["rev-list", common_commit + ".." + branch]).rstrip().rsplit()
         print commits
 
-        #"Format patches"
+        # "Format patches"
         patches = git(["format-patch", "-" + str(len(commits))]).rstrip().splitlines()
 
         self.checkout_branch("master")
@@ -130,14 +158,14 @@ class CheckPatch(Bot):
         request_metadata = self.get_request_metadata()
         revision_num = self.get_latest_revision_num()
         review = self.create_review(request_metadata['id'], revision_num, \
-                                   "There are issues", False)
+                                    "There are issues", False)
 
         files = self.getAllFilePaths(self.get_latest_revision_path())
         file_metadata = self.getFileMetadata(files[0])
 
         if not branch or not tracking_branch:
-            message = "Please specify the branch and tracking branch.\n" \
-                      "<branch> tracking:<tracking_branch>"
+            message = branch_not_specified_message()
+
         comment = self.create_diff_comment(filediff_id=file_metadata['id'], first_line=1,
                                            num_lines=1, text=message)
         comment['issue_opened'] = True
@@ -149,16 +177,18 @@ class CheckPatch(Bot):
         request_metadata = self.get_request_metadata()
         revision_num = self.get_latest_revision_num()
         review = self.create_review(request_metadata['id'], revision_num, \
-                                   "There are issues", False)
+                                    "There are issues", False)
 
         files = self.getAllFilePaths(self.get_latest_revision_path())
         file_metadata = self.getFileMetadata(files[0])
 
         message = ""
         if not branch_exist:
-            message += "Branch: " + branch + " does not exist\n"
+            message += branch_does_not_exist_message(branch)
+            #message += "Branch: " + branch + " does not exist\n"
         if not tracking_branch_exist:
-            message += "Tracking-Branch: " + tracking_branch + " does not exist\n"
+            #message += "Tracking-Branch: " + tracking_branch + " does not exist\n"
+            message += tracking_branch_does_not_exist_message(tracking_branch)
 
         comment = self.create_diff_comment(filediff_id=file_metadata['id'], first_line=1,
                                            num_lines=1, text=message)
@@ -245,7 +275,7 @@ def create_comment_from_message(message):
 def parse_chunk(chunk):
     chunk_type = chunk[0].partition(":")[0]
     obj = {
-        'chunk_type':chunk_type
+        'chunk_type': chunk_type
     }
 
     if len(chunk) > 1:
@@ -264,10 +294,10 @@ def parse_chunk(chunk):
             parse_nonfile(chunk, obj)
 
     elif chunk_type == "total":
-        #print "Do nothing with total?"
+        # print "Do nothing with total?"
         pass
     else:
-        #print "What are you then? " + chunk_type
+        # print "What are you then? " + chunk_type
         pass
 
     return obj
@@ -291,4 +321,3 @@ def main(inputdir, config):
 
 def do_you_care(changes, botname):
     return Bot.do_you_care(changes, botname)
-
