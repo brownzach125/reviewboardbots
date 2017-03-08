@@ -74,7 +74,16 @@ class CheckPatch(Bot):
         # tracking_branch = request_metadata['tracking-branch']
 
         full_branch = request_metadata['branch'].strip()
-        branch = full_branch.split()[0]
+
+        branch = None
+        tracking_branch = None
+
+        branch = full_branch.split()
+        if not branch:
+            self.report_missing_branch(branch, tracking_branch)
+            return
+        branch = branch[0]
+
         tracking_branch = full_branch.split("tracking:")
         if len(tracking_branch) > 1:
             tracking_branch = tracking_branch[-1]
