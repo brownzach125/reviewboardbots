@@ -19,6 +19,10 @@ class Bot:
         self._password = config['password']
         self._server = config['server']
 
+    def bio(self):
+        """A little something about the bot that it will tell people when it reviews"""
+        return None
+
     def get_request_metadata(self):
         with open(os.path.join(self.input_dir, 'request_metadata.json')) as data_file:
             return json.load(data_file)
@@ -129,7 +133,7 @@ class Bot:
 
     def send_review(self, review):
         agent = ResponseAgent(self.get_server(), self.get_username(), self.get_password())
-        agent.respond(review)
+        agent.respond(review, self.bio())
 
 
     @staticmethod

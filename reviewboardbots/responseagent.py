@@ -9,7 +9,7 @@ class ResponseAgent:
         self.client = RBClient(server, username=name, password=password)
         self.name = name
 
-    def respond(self, response):
+    def respond(self, response, bio):
 
         root = self.client.get_root()
 
@@ -25,7 +25,9 @@ class ResponseAgent:
         response.pop('request_id', None)
 
         #review.update(body_top=response['body_top'], ship_it=response['ship_it'], )
-        response['body_top'] = ResponseAgent.review_header() + "\n\n\n" + response['body_top']
+        if not bio:
+            bio = ""
+        response['body_top'] = "{0}\n\n\n{1}\n\n\n{2}".format(ResponseAgent.review_header(), bio, response['body_top'])
         review.update(**response)
 
     @staticmethod

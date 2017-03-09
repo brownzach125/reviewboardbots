@@ -34,6 +34,22 @@ def tracking_branch_does_not_exist_message(tracking_branch):
     return message.format(tracking_branch)
 
 
+def bio_message():
+    message = \
+            "Hello I'm the linux_kernel_checkpatch_bot. Thanks for adding me as a reviewer!\n" \
+            "My job is to ensure all code I see follows the linux kernel coding style.\n" \
+            "Here's some information about me and how to use me\n" \
+            "Currently I run scripts/checkpatch.pl --strict <patch_name>\n" \
+            "I need the branch field set to \"<branch name> tracking:<tracking branch name>\n" \
+            "I get your code exclusively from the git repo, so in order for me to work correctly\n" \
+            "make sure your code is up to date before posting any diffs to review-board, otherwise I'll just run on whatever is currently on the git repo.\n" \
+            "If you do ever need me to run again, (like maybe because you posted a diff before pushing to the git repo) just change the branch field slighty.\n" \
+            "For example you could just insert a space between the branch name and the word tracking.\n" \
+            "\n" \
+            "Now about those commits you made..."
+    return message
+
+
 class CheckPatch(Bot):
     def __init__(self, input_dir, config):
         Bot.__init__(self, input_dir, config)
@@ -44,6 +60,9 @@ class CheckPatch(Bot):
 
         self.repo_folder = os.path.join("/", "home", "zbrown", "linux2")
         self.repo_origin = "git://git.natinst.com/linux.git"
+
+    def bio(self):
+        return bio_message()
 
     def change_to_git_folder(self):
         linux_tree_path = os.path.join(self.repo_folder, "linux")
