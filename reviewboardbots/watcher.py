@@ -2,6 +2,7 @@ import time
 import logging
 import traceback
 from rbtools.api.client import RBClient
+import rbtools
 import datetime
 from tinydb import TinyDB, Query
 from bots.botfood import BotFood
@@ -22,53 +23,28 @@ class Watcher:
         self.bot_name_list = bot_name_list
 
         self.bot_manager = bot_manager
-        self.time_obj = datetime.datetime.utcnow() - datetime.timedelta(minutes=5)
-        self.newest_request_seen_timestamp = self.time_obj.isoformat()
         self.requests_seen = {}
         self.keep_watching = False
+        # TODO seriously Zach?
         self.bot_food_path = "/home/zbrown/techWeek/reviewboardbots/botfood"
         self.data = Data(self.client, self.bot_food_path, self.bot_name_list)
 
-    def set_newest_timestamp(self, requests):
-        """We want to filter requests out from the server, but need to use its timestamps"""
-        time_max = self.time_obj
-        for request in requests:
-            "Get timestamp from newest request in this group and inc by microsecond :)"
-            time_str = request.last_updated
-            time_obj = parse_server_time_stamp(time_str)
-
-            if time_obj.time() > time_max.time():
-                time_max = time_obj
-
-        if time_max != self.time_obj:
-            self.time_obj = time_max
-            self.time_obj += datetime.timedelta(seconds=1)
-            print "Updating time " + self.time_obj.isoformat()
-            self.newest_request_seen_timestamp = self.time_obj.isoformat()
-
+    # Get new requests from the reviewboard server
+    # Same as old function, but with smarter approach
     def get_new_requests(self):
-        """get reviews after the timestamp"""
         root = self.client.get_root()
-        # requests = root.get_review_requests(last_updated_from=self.newest_request_seen_timestamp)
-        requests = root.get_review_requests()
-        logging.info("Raw list of requests received " + str([request["id"] for request in requests]))
 
-        requests = self.filter_out_requests_not_for_our_bots(requests)
+        # TODO do I need to remove duplicates???
+        requests = []
+        for bot_name in self.bot_name_list:
+            try:
+                requests += root.get_review_requests(to_users=bot_name)
+            except rbtools.api.errors.APIError as error:
+                if error.message != "Object does not exist":
+                    raise error
+
         logging.info("list of requests after filtering by bot names " + str([request["id"] for request in requests]))
-
-        # Set the timestamp for next time
-        self.set_newest_timestamp(requests)
-
         return requests
-
-    def filter_out_requests_not_for_our_bots(self, requests):
-        filtered_requests = []
-        for request in requests:
-            for person in request.target_people:
-                if person.title in self.bot_name_list:
-                    filtered_requests.append(request)
-                    break
-        return filtered_requests
 
     def watch(self):
         """Periodically check for new reviews, spin off bots when needed"""
