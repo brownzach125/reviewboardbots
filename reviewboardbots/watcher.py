@@ -78,10 +78,14 @@ class Watcher:
         print("Watcher: I am watching")
         while self.keep_watching:
             try:
+                # Get new requests from reviewboard server
                 new_requests = self.get_new_requests()
+                # Add those requets to the database
                 self.data.add_requests(new_requests)
-
+                # Ask the database for requests that need "attention"
                 requests_in_need_of_attention = self.data.fresh_requests()
+
+                # Handle those requests
                 if requests_in_need_of_attention:
                     self.bot_manager.process_new_requests(requests_in_need_of_attention)
                     self.data.mark_attended(requests_in_need_of_attention)
@@ -100,6 +104,9 @@ class Watcher:
         self.keep_watching = False
 
 
+# The magic database object, which does a lot of the filtering work
+# lets the watcher keep track of which reviews it's seen before and if they've changed enough
+# to warrant action
 class Data:
     def __init__(self, client, botfood_path, bot_name_list):
         self.db = TinyDB('db.json')

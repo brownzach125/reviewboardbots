@@ -3,10 +3,10 @@ import os
 import threading
 import logging
 
-logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
-
 from bots.botmanager import BotManager
 from reviewboardbots.watcher import Watcher
+
+logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
 
 
 class Service:
