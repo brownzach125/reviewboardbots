@@ -1,9 +1,9 @@
 """Apply the most recent linux kernel checkpatch script to diff"""
 import os
-from sh import git, cd, ls
-import sh
 
-from bots.bot import Bot
+import sh
+from bot import Bot
+from sh import git, cd, ls
 
 
 def branch_not_specified_message():

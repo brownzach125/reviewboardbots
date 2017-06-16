@@ -7,7 +7,7 @@
 """
 import os
 import json
-from reviewboardbots.responseagent import ResponseAgent
+from responseagent import ResponseAgent
 
 
 class Bot:

@@ -1,33 +1,20 @@
-import json
+#import json
+import yaml
+import logging
 import os
 import threading
-import logging
+import config
 
-from bots.botmanager import BotManager
-from reviewboardbots.watcher import Watcher
+from botmanager import BotManager
+from watcher import Watcher
 
 logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
 
 
 class Service:
-    def __init__(self, config_file_path):
-        with open(config_file_path, 'r') as data_file:
-            self.config = json.load(data_file)
-
-        if 'review_board_server' not in self.config:
-            raise ValueError('Must set review_board_server')
-
-        if 'bots' not in self.config:
-            raise ValueError('bots object must at least exist')
-
-        bot_name_list = []
-        bot_dict = {}
-        for bot in self.config['bots']:
-            bot_name_list.append(bot['name'])
-            bot_dict[bot['name']] = bot
-
-        self.bot_manager = BotManager(bot_dict, self.config['review_board_server'])
-        self.watcher = Watcher(self.config['review_board_server'], self.bot_manager, bot_name_list, self.config['creds'])
+    def __init__(self):
+        self.bot_manager = BotManager()
+        self.watcher = Watcher(self.bot_manager)
         self.watcher_thread = None
 
     def start(self):
@@ -43,5 +30,5 @@ class Service:
         self.watcher_thread = None
 
 
-service = Service(os.path.join("config.json"))
+service = Service()
 service.start()

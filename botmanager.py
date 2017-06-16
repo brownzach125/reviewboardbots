@@ -1,19 +1,18 @@
 import threading
 import traceback
-
 from threading import RLock, Condition
 import importlib
 import logging
-import datetime
+from config import config
 
 
 class BotManager:
     """Handles the bots"""
-    def __init__(self, bot_dict, server="", max_threads=5):
-        self.bots = bot_dict
+    def __init__(self):
+        self.bots = config['bots']
         self.being_paid = False
         self.threads = []
-        self.max_threads = max_threads
+        self.max_threads = config['max_threads']
 
         self.queueLock = Condition(RLock())
         self.queue = []
@@ -24,7 +23,7 @@ class BotManager:
             if 'max_concurrently' not in bot:
                 bot['max_concurrently'] = 1
             bot['code'] = importlib.import_module(bot['script'])
-            bot['server'] = server
+            bot['server'] = config['review_board_server']
 
     def start(self):
         self.being_paid = True

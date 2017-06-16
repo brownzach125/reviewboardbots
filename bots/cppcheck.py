@@ -2,9 +2,8 @@ import difflib
 import os
 import re
 import subprocess
-import sys
 
-from bots.bot import Bot
+from reviewboardbots.bots.bot import Bot
 
 # 2 = first line #
 # 5 = second line # (optional)

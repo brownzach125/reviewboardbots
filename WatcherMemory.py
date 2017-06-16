@@ -1,5 +1,5 @@
 from tinydb import TinyDB, Query
-from bots.botfood import BotFood
+from botfood import BotFood
 
 
 # A watcher's memory

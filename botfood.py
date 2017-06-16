@@ -13,7 +13,7 @@ class BotFood:
                 'diffs': BotFood.process_diff_lists(request.get_diffs())
             }
         else:
-            # So the bot food already exists treat request as path to botfood
+            # So the bot food already exists treat request as path to botfood_folder
             self.input_dir = request
 
     @staticmethod
@@ -122,7 +122,7 @@ class BotFood:
             json.dump(fileobj['filediff_data'], outfile)
 
     def save(self, path):
-        """Save the botfood object, including downloading the files it has urls to"""
+        """Save the botfood_folder object, including downloading the files it has urls to"""
         request_path = os.path.join(path, str(self.review_request['metadata']['id']))
         self.save_request(self.review_request, request_path)
         return request_path

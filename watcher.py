@@ -4,6 +4,7 @@ import traceback
 from rbtools.api.client import RBClient
 import rbtools
 import datetime
+import config
 from WatcherMemory import WatcherMemory
 
 
@@ -13,19 +14,18 @@ def parse_server_time_stamp(timestamp):
 
 class Watcher:
     """The thing that watches review board for things"""
-    def __init__(self, server, bot_manager, bot_name_list, creds):
+    def __init__(self, bot_manager):
         print("The watcher is born")
-        self.creds = creds
-        self.server = server
-        self.client = RBClient(server, username=creds['username'], password=creds['password'])
+        self.creds = config.config['creds']
+        self.server = config.config['review_board_server']
+        self.client = RBClient(self.server, username=self.creds['username'], password=self.creds['password'])
 
-        self.bot_name_list = bot_name_list
+        self.bot_name_list = config.config['bots'].keys()
 
         self.bot_manager = bot_manager
         self.requests_seen = {}
         self.keep_watching = False
-        # TODO seriously Zach?
-        self.bot_food_path = "/home/zbrown/techWeek/reviewboardbots/botfood"
+        self.bot_food_path = "./botfood_folder"
         self.memory = WatcherMemory(self.client, self.bot_food_path, self.bot_name_list)
 
     # Get new requests from the reviewboard server

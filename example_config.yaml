@@ -1,0 +1,16 @@
+review_board_server: http://review-board.natinst.com
+
+# Watcher specific
+polling_wait_time : 60
+creds:
+  username: zbrown
+  password: password
+
+max_threads: 5
+bots:
+  linux_kernel_checkpat_bot_fake:
+    name: linux_kernel_checkpatch_bot_fake
+    password: password
+    script: bots.linux_kernel_checkpatch,
+    max_concurrently: 1
+
