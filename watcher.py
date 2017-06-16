@@ -25,6 +25,8 @@ class Watcher:
         self.bot_manager = bot_manager
         self.requests_seen = {}
         self.keep_watching = False
+        # TODO make a configuration
+        # Protect against non existance
         self.bot_food_path = "./botfood_folder"
         self.memory = WatcherMemory(self.client, self.bot_food_path, self.bot_name_list)
 
@@ -77,3 +79,4 @@ class Watcher:
 
     def stop(self):
         self.keep_watching = False
+        # TODO need to join
