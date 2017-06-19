@@ -73,7 +73,7 @@ class Watcher:
                 traceback.print_exc()
 
                 logging.error("The watcher encountered an error while polling")
-            time.sleep(5)
+            time.sleep(config.config['polling_wait_time'])
 
         print("Watcher: My watch has ended")
 
