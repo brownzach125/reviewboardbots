@@ -179,8 +179,8 @@ class CheckPatch(Bot):
         review = self.create_review(request_metadata['id'], revision_num, \
                                     "There are issues", False)
 
-        files = self.getAllFilePaths(self.get_latest_revision_path())
-        file_metadata = self.getFileMetadata(files[0])
+        files = self.get_all_file_paths(self.get_latest_revision_path())
+        file_metadata = self.get_file_metadata(files[0])
 
         if not branch or not tracking_branch:
             message = branch_not_specified_message()
@@ -198,8 +198,8 @@ class CheckPatch(Bot):
         review = self.create_review(request_metadata['id'], revision_num, \
                                     "There are issues", False)
 
-        files = self.getAllFilePaths(self.get_latest_revision_path())
-        file_metadata = self.getFileMetadata(files[0])
+        files = self.get_all_file_paths(self.get_latest_revision_path())
+        file_metadata = self.get_file_metadata(files[0])
 
         message = ""
         if not branch_exist:
@@ -231,8 +231,8 @@ class CheckPatch(Bot):
                 message += ' is good to go!\n'
             review['body_top'] += message
 
-            file_paths = self.getAllFilePaths(self.get_latest_revision_path())
-            first_file_id = self.getFileMetadata(file_paths[0])['id']
+            file_paths = self.get_all_file_paths(self.get_latest_revision_path())
+            first_file_id = self.get_file_metadata(file_paths[0])['id']
             for comment in patch_detail['comments']:
                 if 'file' not in comment:
                     review_comment = self.create_diff_comment(first_file_id, 1, 1,
@@ -242,8 +242,8 @@ class CheckPatch(Bot):
                 else:
                     file_name = comment['file']
                     file_path = self.convertRealFilenametoBotFoodFilePath(self.get_latest_revision_num(), file_name)
-                    line_map = self.getPatchedFileLineToUnifiedDiffLineMap(file_path)
-                    review_comment = self.create_diff_comment(self.getFileMetadata(file_path)['id'],
+                    line_map = self.get_patched_file_line_to_unified_diff_line_map(file_path)
+                    review_comment = self.create_diff_comment(self.get_file_metadata(file_path)['id'],
                                                               line_map[int(comment['line'])], comment['num_lines'],
                                                               "In " + patch_name + ",\n" + comment['message'])
                     review_comment['issue_opened'] = True
