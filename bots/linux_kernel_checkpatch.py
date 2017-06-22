@@ -61,9 +61,15 @@ class CheckPatch(Bot):
         self.repo_folder = os.path.join("/", "home", "zbrown", "linux2")
         self.repo_origin = "git://git.natinst.com/linux.git"
 
+    ##############################
+    # Bot overrides
+    ##############################
     def bio(self):
         return bio_message()
 
+    ##############################
+    # Functions for handling git
+    ##############################
     def change_to_git_folder(self):
         linux_tree_path = os.path.join(self.repo_folder, "linux")
         cd(linux_tree_path)
@@ -114,99 +120,25 @@ class CheckPatch(Bot):
 
         git.checkout(["-b", branch, "origin/" + branch])
 
-    def run(self):
-        """The main execution of a bot"""
-        request_metadata = self.get_request_metadata()
-        # branch = request_metadata['branch']
-        # tracking_branch = request_metadata['tracking-branch']
-
-        full_branch = request_metadata['branch'].strip()
-
-        branch = None
-        tracking_branch = None
-
-        branch = full_branch.split()
-        if not branch:
-            self.report_missing_branch(branch, tracking_branch)
-            return
-        branch = branch[0]
-
-        tracking_branch = full_branch.split("tracking:")
-        if len(tracking_branch) > 1:
-            tracking_branch = tracking_branch[-1]
-            # tracking_branch = tracking_branch.replace("origin/", "")
-        else:
-            tracking_branch = None
-
-        if not branch or not tracking_branch:
-            self.report_missing_branch(branch, tracking_branch)
-            return
-
-        self.prepare_git_folder()
-
-        tracking_branch_exist = self.branch_exist(tracking_branch)
-        branch_exist = self.branch_exist(branch)
-
-        if not branch_exist or not tracking_branch_exist:
-            self.report_missing_branch_exist(branch, branch_exist, tracking_branch, tracking_branch_exist)
-            return
-
-        self.checkout_branch(tracking_branch)
-        self.checkout_branch(branch)
-
-        common_commit = self.find_common_commit(tracking_branch, branch)
-        print common_commit
-
-        if not common_commit:
-            print "Did not find common commit"
-            return
-
-        # Find commits on branch after common commit
-        commits = git(["rev-list", common_commit + ".." + branch]).rstrip().rsplit()
-        print commits
-
-        # "Format patches"
-        patches = git(["format-patch", "-" + str(len(commits))]).rstrip().splitlines()
-
-        self.checkout_branch("master")
-
-        patch_details = self.check_patches(patches)
-        self.respond_to_patches(patch_details)
-
-    def report_missing_branch(self, branch, tracking_branch):
+    ##########################################
+    # Review Actions
+    ##########################################
+    def report_branch_problems(self, branch, tracking_branch,
+                               branch_exist=True, tracking_branch_exist=True):
         request_metadata = self.get_request_metadata()
         revision_num = self.get_latest_revision_num()
         review = self.create_review(request_metadata['id'], revision_num, \
                                     "There are issues", False)
 
-        files = self.getAllFilePaths(self.get_latest_revision_path())
-        file_metadata = self.getFileMetadata(files[0])
-
-        if not branch or not tracking_branch:
-            message = branch_not_specified_message()
-
-        comment = self.create_diff_comment(filediff_id=file_metadata['id'], first_line=1,
-                                           num_lines=1, text=message)
-        comment['issue_opened'] = True
-
-        review['diff_comments'].append(comment)
-        self.send_review(review)
-
-    def report_missing_branch_exist(self, branch, branch_exist, tracking_branch, tracking_branch_exist):
-        request_metadata = self.get_request_metadata()
-        revision_num = self.get_latest_revision_num()
-        review = self.create_review(request_metadata['id'], revision_num, \
-                                    "There are issues", False)
-
-        files = self.getAllFilePaths(self.get_latest_revision_path())
+        files = self.get_all_file_paths(self.get_latest_revision_path())
         file_metadata = self.getFileMetadata(files[0])
 
         message = ""
+        if not branch or not tracking_branch:
+            message += branch_not_specified_message()
         if not branch_exist:
             message += branch_does_not_exist_message(branch)
-            #message += "Branch: " + branch + " does not exist\n"
         if not tracking_branch_exist:
-            #message += "Tracking-Branch: " + tracking_branch + " does not exist\n"
             message += tracking_branch_does_not_exist_message(tracking_branch)
 
         comment = self.create_diff_comment(filediff_id=file_metadata['id'], first_line=1,
@@ -231,9 +163,10 @@ class CheckPatch(Bot):
                 message += ' is good to go!\n'
             review['body_top'] += message
 
-            file_paths = self.getAllFilePaths(self.get_latest_revision_path())
+            file_paths = self.get_all_file_paths(self.get_latest_revision_path())
             first_file_id = self.getFileMetadata(file_paths[0])['id']
             for comment in patch_detail['comments']:
+                review_comment = ""
                 if 'file' not in comment:
                     review_comment = self.create_diff_comment(first_file_id, 1, 1,
                                                               "In " + patch_name + ",\n" + comment['message'])
@@ -272,7 +205,63 @@ class CheckPatch(Bot):
 
         return obj
 
+    @staticmethod
+    def parse_branch_field(full_branch):
+        branch = full_branch.split(' ')
+        tracking_branch = None
+        if not branch:
+            return None, None
+        branch = branch[0]
 
+        parts = full_branch.split("tracking:")
+        if len(parts) > 1:
+            tracking_branch = parts[-1]
+        return branch, tracking_branch
+
+    def run(self):
+        """The main execution of checkpatch bot"""
+        request_metadata = self.get_request_metadata()
+        full_branch = request_metadata['branch'].strip()
+
+        branch, tracking_branch = CheckPatch.parse_branch_field(full_branch)
+        if not branch or not tracking_branch:
+            self.report_branch_problems(branch, tracking_branch)
+            return
+
+        self.prepare_git_folder()
+
+        tracking_branch_exist = self.branch_exist(tracking_branch)
+        branch_exist = self.branch_exist(branch)
+        if not branch_exist or not tracking_branch_exist:
+            self.report_branch_problems(branch, tracking_branch, branch_exist, tracking_branch_exist)
+            return
+
+        self.checkout_branch(tracking_branch)
+        self.checkout_branch(branch)
+
+        common_commit = self.find_common_commit(tracking_branch, branch)
+        print common_commit
+
+        if not common_commit:
+            print "Did not find common commit"
+            return
+
+        # Find commits on branch after common commit
+        commits = git(["rev-list", common_commit + ".." + branch]).rstrip().rsplit()
+        print commits
+
+        # "Format patches"
+        patches = git(["format-patch", "-" + str(len(commits))]).rstrip().splitlines()
+
+        self.checkout_branch("master")
+
+        patch_details = self.check_patches(patches)
+        self.respond_to_patches(patch_details)
+
+
+#######################
+# Helper functions for processing the results of scripts/checkpatch.pl
+########################
 def group_message_lines(lines):
     message = []
     for line in lines:
@@ -284,53 +273,46 @@ def group_message_lines(lines):
 
 
 def create_comment_from_message(message):
-    chunk = parse_chunk(message)
-    if 'message' in chunk:
-        return chunk
-    else:
-        return None
-
-
-def parse_chunk(chunk):
-    chunk_type = chunk[0].partition(":")[0]
+    message_type = message[0].partition(":")[0]
     obj = {
-        'chunk_type': chunk_type
+        'message_type': message_type
     }
 
-    if len(chunk) > 1:
-        second_line_break_down = chunk[1].split(":")
-    else:
-        second_line_break_down = []
+    second_line_break_down = []
+    if len(message) > 1:
+        second_line_break_down = message[1].split(":")
 
     is_file = False
     if len(second_line_break_down) >= 2 and second_line_break_down[1].strip() == "FILE":
         is_file = True
 
-    if chunk_type == "ERROR" or chunk_type == "WARNING" or chunk_type == "CHECK":
+    if message_type in ["ERROR", "WARNING", "CHECK"]:
         if is_file:
-            parse_file(chunk, obj)
+            parse_file(message, obj)
         else:
-            parse_nonfile(chunk, obj)
+            parse_nonfile(message, obj)
 
-    elif chunk_type == "total":
+    elif message_type == "total":
         # print "Do nothing with total?"
         pass
     else:
         # print "What are you then? " + chunk_type
         pass
-
-    return obj
+    if 'message' in obj:
+        return obj
+    else:
+        return None
 
 
 def parse_file(chunk, obj):
     obj['file'] = chunk[1].split(":")[2].strip()
     obj['line'] = chunk[1].split(":")[3].strip()
     obj['num_lines'] = len(chunk) - 2
-    obj['message'] = obj['chunk_type'] + ": " + chunk[0].partition(":")[2].strip()
+    obj['message'] = obj['message_type'] + ": " + chunk[0].partition(":")[2].strip()
 
 
 def parse_nonfile(chunk, obj):
-    obj['message'] = obj['chunk_type'] + ": " + chunk[0].partition(":")[2].strip()
+    obj['message'] = obj['message_type'] + ": " + chunk[0].partition(":")[2].strip()
 
 
 # Boiler Plate
