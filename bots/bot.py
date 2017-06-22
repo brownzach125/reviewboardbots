@@ -60,7 +60,7 @@ class Bot:
         li = [os.path.join(revisionPath, elem) for elem in li]
         return [elem for elem in li if os.path.isdir(elem)]
 
-    def getFileMetadata(self, filepath):
+    def get_file_metadata(self, filepath):
         with open(os.path.join(filepath, 'file_metadata.json')) as data_file:
             return json.load(data_file)
 
@@ -79,8 +79,8 @@ class Bot:
         file_path += ".file"
         return os.path.join(diff_path, file_path)
 
-    def getPatchedFileLineToUnifiedDiffLineMap(self, file_path):
-        metadata = self.getFileMetadata(file_path)
+    def get_patched_file_line_to_unified_diff_line_map(self, file_path):
+        metadata = self.get_file_metadata(file_path)
         file_id = metadata['id']
         diff_metadata = self.getFileDiffObj(file_path)
 

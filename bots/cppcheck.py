@@ -49,7 +49,7 @@ class CppCheck(Bot):
         Bot.__init__(self, input_dir, config)
 
     def process_change(self, folder_path):
-        metadata = self.getFileMetadata(folder_path)
+        metadata = self.get_file_metadata(folder_path)
         file_id = metadata['id']
         diff_metadata = self.getFileDiffObj(folder_path)
 
@@ -98,8 +98,8 @@ class CppCheck(Bot):
 
     def run(self):
         comments = []
-        for file_path in self.getAllFilePaths(self.get_latest_revision_path()):
-            file_metadata = self.getFileMetadata(file_path)
+        for file_path in self.get_all_file_paths(self.get_latest_revision_path()):
+            file_metadata = self.get_file_metadata(file_path)
             comments += self.process_change(file_path)
 
         ship_it = len(comments) == 0

@@ -132,7 +132,7 @@ class CheckPatch(Bot):
                         request_metadata['id'], revision_num)
 
         files = self.get_all_file_paths(self.get_latest_revision_path())
-        file_metadata = self.getFileMetadata(files[0])
+        file_metadata = self.get_file_metadata(files[0])
 
         message = ""
         if not branch or not tracking_branch:
@@ -170,7 +170,7 @@ class CheckPatch(Bot):
             review.header += message
 
             file_paths = self.get_all_file_paths(self.get_latest_revision_path())
-            first_file_id = self.getFileMetadata(file_paths[0])['id']
+            first_file_id = self.get_file_metadata(file_paths[0])['id']
             for comment in patch_detail['comments']:
                 review_comment = ""
                 if 'file' not in comment:
@@ -180,7 +180,7 @@ class CheckPatch(Bot):
                 else:
                     file_name = comment['file']
                     file_path = self.convertRealFilenametoBotFoodFilePath(self.get_latest_revision_num(), file_name)
-                    line_map = self.getPatchedFileLineToUnifiedDiffLineMap(file_path)
+                    line_map = self.get_patched_file_line_to_unified_diff_line_map(file_path)
                     review_comment = Review.Comment(self.getFileMetadata(file_path)['id'],
                                                     line_map[int(comment['line'])], comment['num_lines'],
                                                     "In " + patch_name + ",\n" + comment['message'])
@@ -196,9 +196,6 @@ class CheckPatch(Bot):
 
         review.send(self.bio())
 
-    #############################################
-    # The actual linting and running functions
-    #############################################
     def check_patches(self, patches):
         obj = {}
         for patch_name in patches:
