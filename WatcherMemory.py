@@ -23,7 +23,7 @@ class WatcherMemory:
         for request in requests:
             self.request_table.update({'needs_attention': False, 'new_changes': []}, Request.id == request["id"])
 
-    def add_requests(self, requests):
+    def add_requests(self, requests, rb_client):
         for raw_request in requests:
             Request = Query()
             request = {
@@ -43,7 +43,7 @@ class WatcherMemory:
             request['needs_attention'], request['new_changes'] = self.request_need_attention(raw_request, request)
             # Only save the bot food if we think anyone will care
             if request['needs_attention']:
-                request['bot_food_path'] = BotFood(raw_request).save(self.botfood_path)
+                request['bot_food_path'] = BotFood(raw_request, rb_client=rb_client).save(self.botfood_path)
             self.request_table.update(request, Request.id == raw_request["id"])
 
     # Does a request need attention and if so from who?

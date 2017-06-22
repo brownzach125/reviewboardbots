@@ -58,7 +58,7 @@ class Watcher:
                 # Get new requests from reviewboard server
                 new_requests = self.get_new_requests()
                 # Add those requets to the database
-                self.memory.add_requests(new_requests)
+                self.memory.add_requests(new_requests, self.client)
                 # Ask the database for requests that need "attention"
                 requests_in_need_of_attention = self.memory.fresh_requests()
 
