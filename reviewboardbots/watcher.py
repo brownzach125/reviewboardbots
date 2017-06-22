@@ -137,7 +137,7 @@ class Data:
             request['needs_attention'], request['new_changes'] = self.request_need_attention(raw_request, request)
             # Only save the bot food if we think anyone will care
             if request['needs_attention']:
-                request['bot_food_path'] = BotFood(raw_request).save(self.botfood_path)
+                request['bot_food_path'] = BotFood(raw_request, rb_client=self.rb_client).save(self.botfood_path)
             self.request_table.update(request, Request.id == raw_request["id"])
 
     # Does a request need attention and if so from who?

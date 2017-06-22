@@ -5,8 +5,9 @@ import urllib
 
 class BotFood:
     """It\'s what bots crave!!!"""
-    def __init__(self, request, is_request=True):
+    def __init__(self, request, is_request=True, rb_client=None):
         """Make a payload out of a review list"""
+        self.rb_client = rb_client
         if is_request:
             self.review_request = {
                 'metadata': BotFood.get_request_metadata(request),
@@ -79,41 +80,48 @@ class BotFood:
 
         "Save request metadatafile file"
         with open(os.path.join(path, 'request_metadata.json'), 'w') as outfile:
-            json.dump(request['metadata'],outfile)
+            json.dump(request['metadata'], outfile)
 
         for diff in request['diffs']:
-            self.save_diff(diff, os.path.join(path, "revision" + str(diff['revision'])))
+            self.save_diff(request['metadata']['id'], diff, os.path.join(path, "revision" + str(diff['revision'])))
 
         return path
 
-    def save_diff(self, diff, path):
+    def save_diff(self, request_id, diff, path):
         if not os.path.exists(path):
             os.mkdir(path)
 
         diff_content = diff['resource'].get_patch()
-        with open(os.path.join(path,'diff'), 'w') as outfile:
+        with open(os.path.join(path, 'diff'), 'w') as outfile:
             outfile.write(diff_content.data)
 
         for fileobj in diff['files']:
             file_dir_name = fileobj['name'].replace("/", "_")
             file_dir_name = file_dir_name.replace("\\" , "_")
             file_dir_name += ".file"
-            BotFood.save_file_obj(fileobj, os.path.join(path, file_dir_name))
+            self.save_file_obj(request_id, diff['revision'], fileobj, os.path.join(path, file_dir_name))
 
-    @staticmethod
-    def save_file_obj(fileobj, path):
+    def save_file_obj(self, review_request_id, diff_revision, fileobj, path):
         """Save the original,patched and metadata about this fileobj"""
         if not os.path.exists(path):
             os.mkdir(path)
 
         "Download original"
         if 'original' in fileobj:
-            urllib.urlretrieve(fileobj['original'], \
+            urllib.urlretrieve(fileobj['original'],
                                os.path.join(path, 'original'))
         "Download patched"
         if 'patched' in fileobj:
-            urllib.urlretrieve(fileobj['patched'], \
+            urllib.urlretrieve(fileobj['patched'],
                                os.path.join(path, 'patched'))
+        "Download diff"
+        diff = self.rb_client.get_root().get_file(review_request_id=review_request_id,
+                             diff_revision=diff_revision,
+                             filediff_id=fileobj['filediff_id'])
+        diff = diff.get_patch()
+        with open(os.path.join(path, "diff"), 'w') as outfile:
+            outfile.write(diff.data)
+
         "Leave behind some metadata"
         with open(os.path.join(path, 'file_metadata.json'), 'w') as outfile:
             json.dump(fileobj['metadata'], outfile)
