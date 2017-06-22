@@ -4,6 +4,7 @@ import os
 import sh
 from bot import Bot
 from sh import git, cd, ls
+from responseagent import Review
 
 
 def branch_not_specified_message():
@@ -127,8 +128,8 @@ class CheckPatch(Bot):
                                branch_exist=True, tracking_branch_exist=True):
         request_metadata = self.get_request_metadata()
         revision_num = self.get_latest_revision_num()
-        review = self.create_review(request_metadata['id'], revision_num, \
-                                    "There are issues", False)
+        review = Review(self.get_server(), self.get_username(), self.get_password(),
+                        request_metadata['id'], revision_num)
 
         files = self.get_all_file_paths(self.get_latest_revision_path())
         file_metadata = self.getFileMetadata(files[0])
@@ -141,49 +142,63 @@ class CheckPatch(Bot):
         if not tracking_branch_exist:
             message += tracking_branch_does_not_exist_message(tracking_branch)
 
-        comment = self.create_diff_comment(filediff_id=file_metadata['id'], first_line=1,
-                                           num_lines=1, text=message)
-        comment['issue_opened'] = True
+        comment = Review.Comment(file_id=file_metadata['id'], first_line=1,
+                                 num_lines=1, message=message)
+        comment.raise_issue = True
 
-        review['diff_comments'].append(comment)
-        self.send_review(review)
+        review.comments.append(comment)
+        review.send(self.bio)
+        return
 
     def respond_to_patches(self, patch_details):
         request_metadata = self.get_request_metadata()
-        review = self.create_review(request_id=request_metadata['id'], revision_id=self.get_latest_revision_num())
-        review['ship_it'] = True
-        review['body_top'] = ""
+
+        review = Review(self.get_server(), self.get_username(), self.get_password(), request_metadata['id'],
+                        self.get_latest_revision_num())
+
+        review.ship_it = True
+        #body_top
+        review.header = ""
 
         for patch_name, patch_detail in sorted(patch_details.iteritems()):
-            review['ship_it'] = review['ship_it'] and not patch_detail['failed']
+            review.ship_it = review.ship_it and not patch_detail['failed']
             message = patch_name
             if patch_detail['failed']:
                 message += ' has style problems, please review\n'
             else:
                 message += ' is good to go!\n'
-            review['body_top'] += message
+            review.header += message
 
             file_paths = self.get_all_file_paths(self.get_latest_revision_path())
             first_file_id = self.getFileMetadata(file_paths[0])['id']
             for comment in patch_detail['comments']:
                 review_comment = ""
                 if 'file' not in comment:
-                    review_comment = self.create_diff_comment(first_file_id, 1, 1,
-                                                              "In " + patch_name + ",\n" + comment['message'])
-                    review_comment['issue_opened'] = True
-                    review['diff_comments'].append(review_comment)
+                    review_comment = Review.Comment(first_file_id, 1, 1,
+                                             "In " + patch_name + ",\n" + comment['message'])
+                    #review['diff_comments'].append(review_comment)
                 else:
                     file_name = comment['file']
                     file_path = self.convertRealFilenametoBotFoodFilePath(self.get_latest_revision_num(), file_name)
                     line_map = self.getPatchedFileLineToUnifiedDiffLineMap(file_path)
-                    review_comment = self.create_diff_comment(self.getFileMetadata(file_path)['id'],
-                                                              line_map[int(comment['line'])], comment['num_lines'],
-                                                              "In " + patch_name + ",\n" + comment['message'])
-                    review_comment['issue_opened'] = True
-                    review['diff_comments'].append(review_comment)
+                    review_comment = Review.Comment(self.getFileMetadata(file_path)['id'],
+                                                    line_map[int(comment['line'])], comment['num_lines'],
+                                                    "In " + patch_name + ",\n" + comment['message'])
 
-        self.send_review(review)
+                if comment['message_type'] == "CHECK":
+                    review_comment.severity = "info"
+                if comment['message_type'] == "WARNING":
+                    review_comment.severity = "minor"
+                if comment['message_type'] == "ERROR":
+                    review_comment.severity = "major"
+                    review_comment.raise_issue = True
+                review.comments.append(review_comment)
 
+        review.send(self.bio())
+
+    #############################################
+    # The actual linting and running functions
+    #############################################
     def check_patches(self, patches):
         obj = {}
         for patch_name in patches:
