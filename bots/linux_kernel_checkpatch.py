@@ -147,7 +147,7 @@ class CheckPatch(Bot):
         comment.raise_issue = True
 
         review.comments.append(comment)
-        review.send(self.bio)
+        review.send(self.bio())
         return
 
     def respond_to_patches(self, patch_details):
