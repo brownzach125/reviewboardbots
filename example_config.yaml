@@ -11,6 +11,6 @@ bots:
   linux_kernel_checkpat_bot_fake:
     name: linux_kernel_checkpatch_bot_fake
     password: password
-    script: bots.linux_kernel_checkpatch,
+    script: bots.linux_kernel_checkpatch
     max_concurrently: 1
 
