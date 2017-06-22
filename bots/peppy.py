@@ -23,8 +23,18 @@ def call_pep8(metadata, diff_filepath, patched_filepath):
             os.chdir(os.path.join("/", "home", "zbrown", "temp"))
             folder, _ = os.path.split(metadata["dest_file"])
             if folder:
+                folder = folder.replace("//", "")
                 mkdir(folder, "-p")
-            cp(patched_filepath, metadata["dest_file"])
+            temp_path = metadata["dest_file"].replace("//", "")
+            cp(patched_filepath, temp_path)
+
+            lines = []
+            with open(diff_filepath, 'r') as oldfile:
+                lines = oldfile.readlines()
+            lines[0] = lines[0].replace("//", "")
+            lines[1] = lines[1].replace("//", "")
+            with open(diff_filepath, 'w') as newfile:
+                newfile.writelines(lines)
 
             mypep8 = pep8.bake("--diff")
             mypep8(cat(diff_filepath))
