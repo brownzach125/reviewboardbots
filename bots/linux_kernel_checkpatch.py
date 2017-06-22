@@ -147,6 +147,7 @@ class CheckPatch(Bot):
         comment.raise_issue = True
 
         review.comments.append(comment)
+        review.ship_it = False
         review.send(self.bio())
         return
 
