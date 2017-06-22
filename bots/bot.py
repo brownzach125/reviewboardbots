@@ -55,10 +55,10 @@ class Bot:
     def get_diff_path(self, revisionPath):
         return os.path.join(revisionPath, "diff")
 
-    def getAllFilePaths(self, revisionPath):
+    def get_all_file_paths(self, revisionPath):
         li = os.listdir(revisionPath)
-        li = [ os.path.join(revisionPath, elem) for elem in li]
-        return [ elem for elem in li if os.path.isdir(elem) ]
+        li = [os.path.join(revisionPath, elem) for elem in li]
+        return [elem for elem in li if os.path.isdir(elem)]
 
     def getFileMetadata(self, filepath):
         with open(os.path.join(filepath, 'file_metadata.json')) as data_file:
@@ -134,7 +134,6 @@ class Bot:
     def send_review(self, review):
         agent = ResponseAgent(self.get_server(), self.get_username(), self.get_password())
         agent.respond(review, self.bio())
-
 
     @staticmethod
     def do_you_care(changes, botname):
