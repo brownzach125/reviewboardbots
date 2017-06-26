@@ -5,6 +5,7 @@ from rbtools.api.client import RBClient
 import rbtools
 import datetime
 import config
+import os
 from WatcherMemory import WatcherMemory
 
 
@@ -27,7 +28,7 @@ class Watcher:
         self.keep_watching = False
         # TODO make a configuration
         # Protect against non existance
-        self.bot_food_path = "./botfood_folder"
+        self.bot_food_path = os.path.abspath("./botfood_folder")
         self.memory = WatcherMemory(self.client, self.bot_food_path, self.bot_name_list)
 
     # Get new requests from the reviewboard server
