@@ -27,8 +27,8 @@ Most bot scripts will eventually post a review.
 ## Setup
 
 1. Clone the repo
-2. Run the python install script
-3. Edit the config.json
+2. Run `setup.py install`
+3. Use the example_config.yaml to create config.yaml
 4. Run python main.py
 
    There are known issues with the file structure. You'll probbally need to change some paths.
@@ -37,5 +37,3 @@ Most bot scripts will eventually post a review.
 
 Look at meangirl for inspiration. That bot is basically the bare minimum.
 Beyond that look into the Bot parent class to get an idea of what methods are available.
-
-
