@@ -7,3 +7,5 @@ config.yaml
 db.json
 botfood_folder
 /playground.py
+*.egg-info/*
+dist/*
