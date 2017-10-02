@@ -1,4 +1,5 @@
 from setuptools import setup
+import os
 
 setup(name='reviewboardbots',
         version='0.1',
@@ -11,3 +12,4 @@ setup(name='reviewboardbots',
         ],
         )
 
+os.mkdir('botfood_folder')
