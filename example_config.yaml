@@ -13,4 +13,12 @@ bots:
     password: password
     script: bots.linux_kernel_checkpatch
     max_concurrently: 1
+    
+  meangirl:
+    name: meangirl
+    password: password
+    script: bots.meangirl
+    max_concurrently: 1
+    groups:
+    - crio_installers
 
