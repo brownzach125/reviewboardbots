@@ -23,13 +23,18 @@ class Watcher:
 
         self.bot_name_list = config.config['bots'].keys()
 
+        self.bot_group_list = {bot_name: config.config['bots'][bot_name]['groups']
+                               if 'groups' in config.config['bots'][bot_name]
+                               else []
+                               for bot_name in self.bot_name_list}
+
         self.bot_manager = bot_manager
         self.requests_seen = {}
         self.keep_watching = False
         # TODO make a configuration
         # Protect against non existance
         self.bot_food_path = os.path.abspath("./botfood_folder")
-        self.memory = WatcherMemory(self.client, self.bot_food_path, self.bot_name_list)
+        self.memory = WatcherMemory(self.client, self.bot_food_path, self.bot_group_list)
 
     # Get new requests from the reviewboard server
     # Same as old function, but with smarter approach

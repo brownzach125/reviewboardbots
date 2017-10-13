@@ -7,11 +7,12 @@ from botfood import BotFood
 # lets the watcher keep track of which reviews it's seen before and if they've changed enough
 # to warrant action
 class WatcherMemory:
-    def __init__(self, client, botfood_path, bot_name_list):
+    def __init__(self, client, botfood_path, bot_list):
         self.db = TinyDB('db.json')
         self.request_table = self.db.table('requests')
         self.rb_client = client
-        self.bot_name_list = bot_name_list
+        self.bot_name_list = bot_list.keys()
+        self.bot_list = bot_list
         self.botfood_path = botfood_path
 
     def fresh_requests(self):
@@ -26,9 +27,17 @@ class WatcherMemory:
     def add_requests(self, requests, rb_client):
         for raw_request in requests:
             Request = Query()
+
+            reviewers = [bot.title for bot in raw_request.target_people if bot.title in self.bot_name_list]
+            groups = [our_bot
+                      for our_bot in self.bot_name_list
+                      if any(group.title
+                             in self.bot_list[our_bot]
+                             for group in raw_request.target_groups)]
+
             request = {
                 "id": raw_request["id"],
-                "bots": [bot.title for bot in raw_request.target_people if bot.title in self.bot_name_list],
+                "bots": [bot for bot in set().union(reviewers, groups)],
             }
 
             entry = self.request_table.search(Request.id == raw_request["id"])
