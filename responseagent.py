@@ -4,9 +4,13 @@ import logging
 
 def review_header():
     """For usability reasons, all reivews posted by reviewboard bots should have some general information."""
-    return "You are being reviewed by a review board bot! If you have any questions or notice any issues contact " \
-           "Zach Brown at zach.brown@ni.com. Or visit this repo and leave an issue. \n https://github.com/brownzach125/reviewboardbots Also feel free to contribute!" \
-
+    from config import config
+    if 'header' in config:
+        return config['header']
+    else:
+        return "You are being reviewed by a review board bot! If you have any questions or notice any issues contact " \
+               "Zach Brown at zach.brown@ni.com. Or visit this repo and leave an issue. \n" \
+               " https://github.com/brownzach125/reviewboardbots Also feel free to contribute!"
 
 
 ###########################
@@ -94,10 +98,10 @@ class ResponseAgent:
         response.pop('diff_comments', None)
         response.pop('request_id', None)
 
-        #review.update(body_top=response['body_top'], ship_it=response['ship_it'], )
+        # review.update(body_top=response['body_top'], ship_it=response['ship_it'], )
         if not bio:
             bio = ""
-        response['body_top'] = "{0}\n\n\n{1}\n\n\n{2}".format(ResponseAgent.review_header(), bio, response['body_top'])
+        response['body_top'] = "{0}\n\n\n{1}\n\n\n{2}".format(review_header(), bio, response['body_top'])
         review.update(**response)
 
     def create_review(self, request_id, revision_id=1, message="Default bot review message", ship_it=False):
@@ -119,9 +123,7 @@ class ResponseAgent:
             'text': text
         }
 
-    @staticmethod
-    def review_header():
-        """For usability reasons, all reivews posted by reviewboard bots should have some general information."""
-        return "You are being reviewed by a review board bot! If you have any questions or notice any issues contact " \
-               "Zach Brown at zach.brown@ni.com. Or visit this repo and leave an issue. \n https://github.com/brownzach125/reviewboardbots Also feel free to contribute!" \
-
+    # @staticmethod
+    # def review_header():
+    #     """For usability reasons, all reivews posted by reviewboard bots should have some general information."""
+    #     return review_header()
