@@ -27,11 +27,9 @@ Most bot scripts will eventually post a review.
 ## Setup
 
 1. Clone the repo
-2. Run `setup.py install`
-3. Use the example_config.yaml to create config.yaml
-4. Run python main.py
-
-   There are known issues with the file structure. You'll probbally need to change some paths.
+2. Run `python setup.py install`
+3. Copy example_config.yaml to config.yaml and then edit config.yaml to match your needs. 
+4. Run `python main.py`
 
 ## Making your own bots.
 
