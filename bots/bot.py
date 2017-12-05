@@ -72,7 +72,7 @@ class Bot:
         with open(os.path.join(filepath, 'filediff_metadata.json')) as data_file:
             return json.load(data_file)
 
-    def convertRealFilenametoBotFoodFilePath(self, revision_id, filename):
+    def convert_real_filename_to_botfood_file_path(self, revision_id, filename):
         diff_path = self.get_revision_path(revision_id)
         file_path = filename.replace("/", "_")
         file_path = file_path.replace("\\" , "_")
