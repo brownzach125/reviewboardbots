@@ -9,6 +9,7 @@ from config import config
 class BotManager:
     """Handles the bots"""
     def __init__(self):
+
         self.bots = config['bots']
         self.being_paid = False
         self.threads = []

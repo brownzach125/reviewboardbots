@@ -1,24 +1,35 @@
 review_board_server: http://review-board.natinst.com
 
-# Watcher specific
+# How often in seconds the watcher should poll the server for new review
+# requests
 polling_wait_time : 60
+# The credentials the watcher should poll with (These are the credentials the
+# review board admins are going to see polling the server)
 creds:
   username: zbrown
   password: password
-
+# The number of threads that can be run at one time (meaning how many bot
+# scripts can be running at once globally
 max_threads: 5
+
+# The list of bots this reviewboard server should run.
 bots:
-  linux_kernel_checkpat_bot_fake:
-    name: linux_kernel_checkpatch_bot_fake
-    password: password
-    script: bots.linux_kernel_checkpatch
-    max_concurrently: 1
-    
-  meangirl:
-    name: meangirl
-    password: password
-    script: bots.meangirl
-    max_concurrently: 1
-    groups:
+  # The name field is the username the bot will use for reviewing
+- name: linux_kernel_checkpatch_bot_fake
+  password: password
+  # The script that should be run for the bot
+  script: bots.linux_kernel_checkpatch
+  # Number of instances of this bot's script that can be run at the same time.
+  # if the bot script uses resources that cannot be shared then this should be
+  # 1
+  max_concurrently: 1
+
+- name: meangirl
+  password: password
+  script: bots.meangirl
+  max_concurrently: 1
+
+  # The groups a bot should review review requests from
+  groups:
     - crio_installers
 
