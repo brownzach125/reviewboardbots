@@ -12,6 +12,9 @@ creds:
 # scripts can be running at once globally
 max_threads: 5
 
+# The header that every bot will include at the top of it's messages
+header: Hey you need to set the header field inside your config file!
+
 # The list of bots this reviewboard server should run.
 bots:
   # The name field is the username the bot will use for reviewing
