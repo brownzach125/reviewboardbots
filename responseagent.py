@@ -73,7 +73,8 @@ class Review:
             'request_id': self.request_id
         })
 
-
+# The old way of creating and sending reviews.
+# I prefer the way above, its the way checkpatch and meangirl do it.
 class ResponseAgent:
     """When you just have to say something"""
 
