@@ -266,7 +266,8 @@ class CheckPatch(Bot):
         # "Format patches"
         patches = git(["format-patch", "-" + str(len(commits))]).rstrip().splitlines()
 
-        self.checkout_branch("_master")
+        git.checkout("_master")
+        git.pull("-f")
 
         patch_details = self.check_patches(patches)
         self.respond_to_patches(patch_details)
