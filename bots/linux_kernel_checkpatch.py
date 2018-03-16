@@ -88,7 +88,8 @@ class CheckPatch(Bot):
         self.change_to_git_folder()
         git.clean("-fxd")
         print git.fetch("origin")
-        git.checkout("_master")
+        git.branch("-D _master")
+        git.checkout("origin/master -b _master")
         git.pull("-f")
         print "-------------Finished preparing git folder"
 
