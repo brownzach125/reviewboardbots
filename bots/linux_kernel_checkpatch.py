@@ -88,7 +88,7 @@ class CheckPatch(Bot):
         self.change_to_git_folder()
         git.clean("-fxd")
         print git.fetch("origin")
-        git.checkout("master")
+        git.checkout("_master")
         git.pull("-f")
         print "-------------Finished preparing git folder"
 
@@ -266,7 +266,7 @@ class CheckPatch(Bot):
         # "Format patches"
         patches = git(["format-patch", "-" + str(len(commits))]).rstrip().splitlines()
 
-        self.checkout_branch("master")
+        self.checkout_branch("_master")
 
         patch_details = self.check_patches(patches)
         self.respond_to_patches(patch_details)
